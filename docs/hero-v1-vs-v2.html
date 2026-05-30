@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>PetDesk v1 vs v2 — hero</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* Tokens: editorial neutral default (SKILL.md baseline) */
+  :root {
+    --paper:       #faf7f2;
+    --paper-2:     #f1ede5;
+    --ink:         #1c1917;
+    --muted:       #57534e;
+    --soft:        #a8a29e;
+    --rule:        rgba(28,25,23,0.12);
+    --rule-solid:  rgba(28,25,23,0.20);
+    --accent:      #b5523a;
+    --accent-tint: rgba(181,82,58,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--paper); }
+  body {
+    width: 1200px;
+    min-height: 630px;
+    padding: 48px 72px 32px;
+    font-family: 'Geist', sans-serif;
+    color: var(--ink);
+  }
+  body > header { margin-bottom: 24px; }
+  body > .grid { margin-bottom: 32px; }
+
+  /* ---- Header ---- */
+  header { display: flex; flex-direction: column; gap: 8px; }
+  .eyebrow {
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--muted);
+  }
+  h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 32px; font-weight: 400;
+    line-height: 1.2; color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: 16px; color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* ---- Comparison grid ---- */
+  .grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr auto 1fr 0.8fr;
+    grid-auto-rows: 36px;
+    align-items: center;
+    column-gap: 24px;
+    row-gap: 0;
+    border-top: 1px solid var(--rule);
+  }
+  .grid > div {
+    border-bottom: 1px solid var(--rule);
+    height: 100%;
+    display: flex;
+    align-items: center;
+  }
+  .grid .head {
+    border-bottom: 1px solid var(--rule-solid);
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px; font-weight: 500;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--soft);
+  }
+  .label {
+    font-size: 13px; font-weight: 500;
+    color: var(--ink);
+  }
+  .v1 {
+    font-family: 'Geist Mono', monospace;
+    font-size: 14px; color: var(--muted);
+    justify-content: flex-end; text-align: right;
+  }
+  .arrow {
+    font-family: 'Geist Mono', monospace;
+    font-size: 13px; color: var(--soft);
+    justify-content: center;
+  }
+  .v2 {
+    font-family: 'Geist Mono', monospace;
+    font-size: 14px; font-weight: 600; color: var(--ink);
+    justify-content: flex-end; text-align: right;
+  }
+  .delta {
+    justify-content: flex-end;
+  }
+  .delta-chip {
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 0.04em;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: var(--accent-tint);
+    color: var(--accent);
+    border: 1px solid rgba(181,82,58,0.25);
+  }
+  .delta-chip.muted {
+    background: transparent;
+    color: var(--muted);
+    border-color: var(--rule);
+  }
+  .delta-chip.success {
+    color: var(--ink);
+    border-color: var(--rule-solid);
+    background: transparent;
+  }
+
+  /* ---- Footer (in-flow normal, sin position absolute) ---- */
+  .footer-area {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 16px;
+    border-top: 1px solid var(--rule);
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted);
+  }
+  .footer-area .stack { color: var(--ink); }
+</style>
+</head>
+<body>
+
+<header>
+  <p class="eyebrow">Showcase Multiagente · A/B Puro</p>
+  <h1>PetDesk v1 vs v2 — el mismo MVP construido dos veces con agentes IA</h1>
+  <p class="subtitle">Aplicando 4 patrones, sin cambiar el modelo, sin cambiar el producto.</p>
+</header>
+
+<section class="grid">
+  <!-- Header row -->
+  <div class="head label">Métrica</div>
+  <div class="head v1">v1</div>
+  <div class="head arrow"></div>
+  <div class="head v2">v2</div>
+  <div class="head delta" style="justify-content:flex-end;">Δ</div>
+
+  <!-- Row 1 -->
+  <div class="label">Costo OpenRouter</div>
+  <div class="v1">$4.21</div>
+  <div class="arrow">→</div>
+  <div class="v2">$1.80</div>
+  <div class="delta"><span class="delta-chip">−57%</span></div>
+
+  <!-- Row 2 -->
+  <div class="label">Tiempo de reloj total</div>
+  <div class="v1">~3 h</div>
+  <div class="arrow">→</div>
+  <div class="v2">49 min</div>
+  <div class="delta"><span class="delta-chip">−73%</span></div>
+
+  <!-- Row 3 — muted delta (focal sólo en costo + tiempo) -->
+  <div class="label">Intervenciones humanas</div>
+  <div class="v1">~12</div>
+  <div class="arrow">→</div>
+  <div class="v2">3</div>
+  <div class="delta"><span class="delta-chip muted">−75%</span></div>
+
+  <!-- Row 4 — muted delta -->
+  <div class="label">Tests al cierre</div>
+  <div class="v1">18</div>
+  <div class="arrow">→</div>
+  <div class="v2">31</div>
+  <div class="delta"><span class="delta-chip muted">+72%</span></div>
+
+  <!-- Row 5 -->
+  <div class="label">PRs limpios al 1er intento</div>
+  <div class="v1">3 / 4</div>
+  <div class="arrow">→</div>
+  <div class="v2">4 / 4</div>
+  <div class="delta"><span class="delta-chip success">✓</span></div>
+
+  <!-- Row 6 -->
+  <div class="label">Scope violations</div>
+  <div class="v1">2</div>
+  <div class="arrow">→</div>
+  <div class="v2">0</div>
+  <div class="delta"><span class="delta-chip success">✓</span></div>
+
+  <!-- Row 7 -->
+  <div class="label">Basura commiteada (tsbuildinfo)</div>
+  <div class="v1">1</div>
+  <div class="arrow">→</div>
+  <div class="v2">0</div>
+  <div class="delta"><span class="delta-chip success">✓</span></div>
+</section>
+
+<div class="footer-area">
+  <span>Stack · Multica self-host · Kimi K2.6 + DeepSeek V3.2 · OpenRouter</span>
+  <span class="stack">github.com/rubenaros/AgentCode</span>
+</div>
+
+</body>
+</html>
