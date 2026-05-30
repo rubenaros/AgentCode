@@ -10,8 +10,19 @@ Notes are written in **Spanish**; match that language when adding to `research/`
 
 ## Layout
 
-- `research/reporte-agentes-kanban-modelos.md` — main report: Kanban orchestrators (Multica, Vibe Kanban, Agent Kanban…), coding-model API costs vs. SWE-bench scores, Claude API-vs-subscription analysis, and a recommended architecture.
-- `research/multica-deep-dive.md` — deep dive on Multica specifically.
+**Research** (planning + investigación de mercado):
+- `research/reporte-agentes-kanban-modelos.md` — reporte principal: orquestadores Kanban (Multica, Vibe Kanban…), costos modelos vs SWE-bench, Claude API-vs-subscription, arquitectura recomendada.
+- `research/multica-deep-dive.md` — deep dive técnico de Multica.
+- `research/proyecto-petdesk.md` — plan original del showcase PetDesk (arquitectura, contratos, 6 issues).
+
+**Docs** (retrospectiva + planning del v2):
+- `docs/COMO-LO-HICIMOS.md` — retrospectiva completa del showcase PetDesk v1: arquitectura (§1-4), flujo (§5-6), errores y resoluciones (§7), receta (§8), costos reales (§10), playbook paso a paso (§13), análisis 🤖/👤 de lo autónomo vs manual (§14).
+- `docs/QUE-APRENDIMOS-V2.md` — plan v2 (las 8 mejoras + apuesta de costo/tiempo) y evaluación de frameworks SDD (OpenSpec, GitHub Spec-Kit) con la decisión final: adoptar 4 patrones sin instalar ninguno.
+
+**Scripts**:
+- `scripts/setup-petdesk-multica.sh` — script idempotente para crear agentes + issues en Multica. Template reusable: para un proyecto nuevo, copiar y cambiar nombres + issue bodies.
+
+**Otros**:
 - `.env.example` → copy to `.env` (gitignored) to fill in keys.
 
 When research documents cross-reference each other, keep the relative markdown links (e.g. `[multica-deep-dive.md](./multica-deep-dive.md)`) intact and bidirectional.
