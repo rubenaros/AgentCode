@@ -1,11 +1,11 @@
 <!--
 ARTÍCULO PARA MEDIUM — borrador
 ~2100 palabras / ~9 min read
-Tono: personal, opinado, primera persona
+Tono: personal, opinado, primera persona (tuteo chileno)
 Idioma: español
 
 SUGERENCIAS VISUALES (Medium):
-1. Hero image: tabla comparativa v1 vs v2 (la que está en TL;DR) renderizada como imagen.
+1. Hero image: tabla comparativa v1 vs v2 (la que está en TL;DR) renderizada como imagen.  ✅ embebida abajo
 2. Después del "Error 3": captura del diff que muestra el `git init` borrando el remote.
 3. Snippet de código del contract test con fast-check (sintaxis highlighted).
 4. Tabla final de resultados como imagen o tabla nativa de Medium.
@@ -15,33 +15,34 @@ HEADLINES ALTERNATIVAS (probar A/B):
 - "Construí la misma app dos veces con agentes IA. La segunda me costó 57% menos. Esto cambió."
 - "El día que mi agente IA hizo `git init` y borró mi repo (y los 11 errores que vinieron después)"
 
-ANTES DE PUBLICAR:
-- [ ] Hacer público `rubenaros/AgentCode` (contiene los docs completos referenciados).
-- [ ] Confirmar que `petdesk` y `petdesk-v2` son visibles (o describir el setup sin link).
-- [ ] Revisar tonos personales — sigue siendo tu voz, no la mía.
+ESTADO:
+- [x] Repos públicos (AgentCode, petdesk, petdesk-v2).
+- [x] Hero image embebida (./hero-v1-vs-v2.png).
+- [x] Voz revisada por el autor.
+- [ ] Importar a Medium (https://medium.com/p/import + URL raw del .md).
 -->
 
 # 12 errores con 5 agentes IA y los 4 patrones que arreglaron todo: $4.21 → $1.80 por el mismo MVP
 
-*Construí dos veces la misma app con un orquestador multiagente. El v2 me costó 57% menos, 73% menos tiempo, y necesitó 75% menos intervenciones mías. Esto es lo que hice mal el primer intento y lo que cambié.*
+*Construí dos veces la misma app con un orquestador multiagente. La v2 me costó 57% menos, 73% menos tiempo, y necesitó 75% menos intervenciones mías. Esto es lo que hice mal al primer intento y lo que cambié.*
 
 ![PetDesk v1 vs v2 — comparativo de costo, tiempo, intervenciones y calidad](./hero-v1-vs-v2.png)
 
----
+Hace dos semanas decidí probar algo concreto: armar un MVP real con varios workers IA, no con un solo agente como Copilot. Quería ver si la promesa del "Kanban con agentes IA" era humo o tenía sustancia. Elegí construir **PetDesk** — una mini-SaaS de recepcionista IA para peluquerías caninas (chat de reservas + dashboard + *backfill* de cancelaciones).
 
-Hace dos semanas decidí probar algo concreto: armar un MVP real con varios agentes IA "trabajadores", no con un solo agente como Copilot. Quería ver si la promesa del "Kanban con agentes IA" era humo o tenía sustancia. Elegí construir **PetDesk** — una mini-SaaS de recepcionista IA para peluquerías caninas (chat de reservas + dashboard + *backfill* de cancelaciones).
+El stack: **Multica** self-host (orquestador open source, ~32k ⭐ en GitHub), **Kimi K2.6** vía **OpenRouter** (10× más barato que Claude Opus), **OpenCode** como CLI del agente, **GitHub** + **Vercel** para deploy.
 
-El stack: **Multica** self-host (orquestador open source, ~32k ⭐ en GitHub), **Kimi K2.6** vía **OpenRouter** (10× más barato que Claude Opus), **OpenCode** como CLI del agente, **GitHub** + **Vercel** para deploy. Cinco agentes simultáneos: Arquitecto, Dev Motor, Dev Chat, Dev Front, QA.
+Cinco agentes simultáneos: Arquitecto, Dev Motor, Dev Chat, Dev Front, QA.
 
 La primera vuelta (v1) la entregué en 3 horas por $4.21. **Funcionó**, pero con dolor. La segunda vuelta (v2), aplicando lecciones, la entregué en **49 minutos por $1.80**. Mismo producto, mismo nivel de calidad, más cobertura de tests.
 
-Esto es la historia honesta — los 12 errores, las 3 lecciones que cambiaron todo, los 4 patrones que produjeron el v2, y los números reales medidos en OpenRouter.
+Esto es la experiencia — los 12 errores, las 3 lecciones que mejoraron todo, los 4 patrones que produjeron el v2, y los números reales medidos en OpenRouter.
 
 ---
 
 ## v1: la sesión donde aprendí qué NO hacer
 
-### Fase 1 — Setup: dos supuestos rotos
+### Fase 1 — Setup: dos supuestos erróneos
 
 **Error 1.** Confié en un reporte de research que decía "Multica no tiene binding de repo". Resulta que sí lo tiene desde la v0.3.6. Tuve que verificar en el código fuente del server para descubrirlo. **Lección: la documentación de research envejece más rápido que el código de proyectos OSS activos.** Verifica en el código instalado, no en notas.
 
@@ -53,7 +54,7 @@ Esto es la historia honesta — los 12 errores, las 3 lecciones que cambiaron to
 
 > Los scaffolders agresivos (`create-next-app`, `create-react-app`, `npm init`) no se mezclan con repos preexistentes. **El arquitecto scaffoldea; los agentes construyen encima.**
 
-**Error 4.** Cuando hice el scaffold yo mismo, el agente ya había escrito sus propios contratos en `src/domain/types.ts`. Improvisó campos distintos al plan (`durationMinutes` vs `durationMin`), removió el campo `windowStart/windowEnd` del Waitlist (que es **la clave del feature estrella de backfill FIFO**), y... reintrodujo SMS en `Notification.channel` cuando explícitamente lo había descartado.
+**Error 4.** Cuando hice el scaffold yo mismo, el agente ya había escrito sus propios contratos en `src/domain/types.ts`. Improvisó campos distintos al plan (`durationMinutes` vs `durationMin`), removió el campo `windowStart/windowEnd` del Waitlist (que es **la clave del feature estrella de backfill FIFO**), y… reintrodujo SMS en `Notification.channel` cuando explícitamente lo había descartado.
 
 > "Según docs/PLAN.md" no es contractual para un LLM. **El arquitecto escribe los contratos a mano. Los agentes los consumen, no los definen.**
 
@@ -63,15 +64,15 @@ Esto es la historia honesta — los 12 errores, las 3 lecciones que cambiaron to
 
 > En máquinas de estado, **lista explícita de estados terminales**, nunca "todo lo que no sea X".
 
-### Fase 4 — Integración: los agentes salieron del scope
+### Fase 4 — Integración: los agentes se salieron del scope
 
-**Error 6.** El agente QA tocó `src/domain/ports.ts` (agregó un método que "necesitaba" para sus tests). El agente Deploy editó `brain.ts` del Dev Chat (para "arreglar lint"). Ambos lejos de su scope nominal.
+**Error 6.** El agente QA tocó `src/domain/ports.ts` (agregó un método que "necesitaba" para sus tests). El agente Deploy editó `brain.ts` del Dev Chat (para "arreglar lint"). Ambos fuera de su scope.
 
 > "No toques X" no es contractual para un LLM. Es una sugerencia que ignora cuando le conviene. **Toda integración necesita revisión humana.**
 
 **Error 7.** QA y Deploy modificaron ambos `tests/brain.test.ts` y `tests/engine.test.ts`. Conflictos garantizados al mergear.
 
-**Error 8.** El lint reventó con 12 errores: `any` casts en tests (legítimos para *fakes*) + `react-hooks/set-state-in-effect` en el dashboard (regla nueva agresiva de React 19 sobre polling legítimo). El default de eslint-config-next no estaba calibrado para mi caso de uso. Fix: overrides en `eslint.config.mjs` — la solución correcta no era contorsionar el código del agente, era ajustar la config.
+**Error 8.** El lint reventó con 12 errores: `any` casts en tests (legítimos para *fakes*) + `react-hooks/set-state-in-effect` en el dashboard (regla nueva agresiva de React 19 sobre polling legítimo). El default de eslint-config-next no estaba calibrado para mi caso de uso. Fix: overrides en `eslint.config.mjs` — la solución correcta no era doblarle la nariz al código del agente, era ajustar la config.
 
 **Error 9.** Un agente commiteó `tsconfig.tsbuildinfo` (artefacto regenerable). Mi `.gitignore` inicial era pobre. Aprendí que **un `.gitignore` débil se replica en todos los PRs siguientes**, y si las 3 ramas paralelas regeneran el mismo archivo, chocan al mergear.
 
@@ -91,7 +92,7 @@ Esto es la historia honesta — los 12 errores, las 3 lecciones que cambiaron to
 
 ## Las 3 lecciones que cambiaron todo
 
-Después de los 12 errores las destilé en 3 principios accionables:
+Después de esos 12 errores aprendí 3 principios:
 
 **1. El arquitecto define contratos y scaffoldea. Punto.**
 Lo mecánico (Next init, types, ports, infraestructura) lo haces tú. El agente nunca toca esos archivos. Lo creativo (lógica, features, UI) lo hace él. Esto va contra la intuición de "que el agente haga TODO" pero es la palanca de mayor retorno.
@@ -117,9 +118,9 @@ Con las lecciones decidí rehacer el mismo producto en un repo nuevo (`petdesk-v
    ```ts
    export function schedulerPortContract(makeSut: () => SchedulerFactory) {
      describe('SchedulerPort — contract', () => {
-       it('cancel devuelve candidates FIFO por createdAt', () => { /* ... */ });
-       it('cancel filtra candidates por serviceId', () => { /* ... */ });
-       it('cancel filtra por ventana (fuera del slot NO matchea)', () => { /* ... */ });
+       it('cancel devuelve candidates FIFO por createdAt', () => { /* … */ });
+       it('cancel filtra candidates por serviceId', () => { /* … */ });
+       it('cancel filtra por ventana (fuera del slot NO matchea)', () => { /* … */ });
      });
    }
    ```
@@ -184,11 +185,11 @@ DeepSeek V3.2 en el frontend entregó 10 archivos (8 en `app/` + 2 utilidades en
 
 **4. Routea por costo.** El frontend (Next + Tailwind + APIs simples) no necesita el mejor modelo. DeepSeek V3.2 lo hizo perfectamente por ~4× menos que Kimi.
 
-**5. No estimes costos — mídelos.** Carga $10 en OpenRouter y revisa `/auth/key` después de cada corrida. Es la única forma honesta.
+**5. No estimes costos — mídelos.** Carga $10 en OpenRouter y revisa `/auth/key` después de cada corrida. Es la única forma real.
 
 **6. No instales OpenSpec ni Spec-Kit.** Sí, los probé. Para flujos multiagente *headless* como Multica, son IDE-céntricos (asumen humano + AI en Cursor/Claude Code corriendo slash commands) y no resuelven el problema real: que el agente respete el contrato. **Adopta sus principios** — `CONSTITUTION`, `[P]` markers, contract tests, checklist por issue — sin agregar dependencias.
 
-**7. Tres intervenciones humanas son OK. Cero requiere mucho más setup.** Las 3 intervenciones del v2 (mergear cada ola + verificación final) son irreductibles sin Autopilot + webhooks + GitHub Actions. La diferencia entre 3 y 0 cuesta otras 3 horas de plomería; entre 12 y 3 las cierras con CONSTITUTION + contracts.
+**7. Tres intervenciones humanas son OK. Cero intervención requiere mucho más setup.** Las 3 intervenciones del v2 (mergear cada ola + verificación final) son irreductibles sin Autopilot + webhooks + GitHub Actions. La diferencia entre 3 y 0 cuesta otras 3 horas de plomería; entre 12 y 3 las cierras con CONSTITUTION + contracts.
 
 ---
 
@@ -205,7 +206,3 @@ DeepSeek V3.2 en el frontend entregó 10 archivos (8 en `app/` + 2 utilidades en
 - [AgentCode](https://github.com/rubenaros/AgentCode) — el workspace de orquestación con los docs completos (retrospectiva de errores, plan v2, evaluación de OpenSpec/Spec-Kit, scripts reusables).
 
 Si vas a probar agentic dev con tu propio orquestador, **empieza por el template**. El resto se ordena solo.
-
----
-
-*¿Construiste algo parecido? Me interesa especialmente si lograste cerrar las últimas intervenciones humanas con Autopilot o GitHub Actions — escríbeme en los comentarios.*
