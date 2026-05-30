@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>LinkedIn Carousel — Multica + 5 agentes IA</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper:       #faf7f2;
+    --paper-2:     #f1ede5;
+    --ink:         #1c1917;
+    --muted:       #57534e;
+    --soft:        #a8a29e;
+    --rule:        rgba(28,25,23,0.12);
+    --rule-solid:  rgba(28,25,23,0.20);
+    --accent:      #b5523a;
+    --accent-tint: rgba(181,82,58,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--paper); }
+  body {
+    font-family: 'Geist', sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* PDF page setup — chrome --print-to-pdf respeta @page */
+  @page { size: 1080px 1350px; margin: 0; }
+  @media print { .slide { page-break-after: always; } }
+
+  .slide {
+    width: 1080px;
+    height: 1350px;
+    padding: 80px 80px 60px;
+    background: var(--paper);
+    position: relative;
+    overflow: hidden;
+    page-break-after: always;
+  }
+  .slide:last-child { page-break-after: auto; }
+
+  /* shared bits */
+  .eyebrow {
+    font-family: 'Geist Mono', monospace;
+    font-size: 14px; font-weight: 500;
+    letter-spacing: 0.20em; text-transform: uppercase;
+    color: var(--muted);
+  }
+  .number {
+    font-family: 'Geist Mono', monospace;
+    font-size: 13px; font-weight: 500;
+    color: var(--soft);
+    letter-spacing: 0.18em;
+  }
+  h1 {
+    font-family: 'Instrument Serif', serif;
+    font-weight: 400; line-height: 1.1;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  h2 {
+    font-family: 'Instrument Serif', serif;
+    font-weight: 400; line-height: 1.15;
+    color: var(--ink);
+    letter-spacing: -0.005em;
+  }
+  .footer-mark {
+    position: absolute;
+    bottom: 48px; left: 80px; right: 80px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: 'Geist Mono', monospace;
+    font-size: 13px; color: var(--soft);
+    letter-spacing: 0.14em; text-transform: uppercase;
+    border-top: 1px solid var(--rule);
+    padding-top: 20px;
+  }
+  .footer-mark .swipe { color: var(--accent); font-weight: 500; }
+  .footer-mark .brand { color: var(--ink); }
+
+  /* ============================================================ */
+  /* SLIDE 1 — COVER                                              */
+  /* ============================================================ */
+  .s1 .stack { display: flex; flex-direction: column; gap: 32px; margin-top: 64px; }
+  .s1 h1 { font-size: 78px; }
+  .s1 .sub {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: 32px; color: var(--muted);
+    line-height: 1.3;
+    margin-top: 40px;
+  }
+  .s1 .stats {
+    margin-top: 80px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+  .s1 .stat {
+    padding: 32px 0;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .s1 .stat:first-child { padding-right: 32px; border-right: 1px solid var(--rule); }
+  .s1 .stat:last-child  { padding-left: 32px; }
+  .s1 .stat .label {
+    font-family: 'Geist Mono', monospace;
+    font-size: 14px; font-weight: 500;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--soft);
+  }
+  .s1 .stat .values {
+    font-family: 'Geist Mono', monospace;
+    font-size: 22px; font-weight: 600;
+    color: var(--ink);
+  }
+  .s1 .stat.focal .values { color: var(--accent); }
+
+  /* ============================================================ */
+  /* SLIDE 2 — EL EXPERIMENTO                                     */
+  /* ============================================================ */
+  .s2 h1 { font-size: 64px; margin-top: 48px; }
+  .s2 .lede {
+    font-size: 24px; line-height: 1.5;
+    color: var(--muted);
+    margin-top: 36px;
+    max-width: 800px;
+  }
+  .s2 .stack-title {
+    font-family: 'Geist Mono', monospace;
+    font-size: 14px; font-weight: 500;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--soft);
+    margin-top: 80px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .s2 .stack-list {
+    margin-top: 24px;
+    display: grid; gap: 18px;
+  }
+  .s2 .stack-list .row {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 24px;
+    font-size: 22px;
+    line-height: 1.4;
+  }
+  .s2 .stack-list .role {
+    font-family: 'Geist Mono', monospace;
+    font-size: 14px; font-weight: 500;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--soft);
+    padding-top: 5px;
+  }
+  .s2 .stack-list .what { color: var(--ink); font-weight: 500; }
+
+  /* ============================================================ */
+  /* SLIDE 3 — v1: EL DOLOR                                       */
+  /* ============================================================ */
+  .s3 h1 { font-size: 72px; margin-top: 48px; }
+  .s3 .accent-num {
+    color: var(--accent);
+    font-style: italic;
+  }
+  .s3 .quote-block {
+    margin-top: 80px;
+    padding: 40px;
+    background: var(--accent-tint);
+    border-left: 4px solid var(--accent);
+    border-radius: 4px;
+  }
+  .s3 .quote-block .lead {
+    font-family: 'Geist Mono', monospace;
+    font-size: 14px; font-weight: 500;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+  .s3 .quote-block .body {
+    font-family: 'Instrument Serif', serif;
+    font-size: 32px; line-height: 1.35;
+    color: var(--ink);
+  }
+  .s3 .takeaway {
+    margin-top: 80px;
+    font-size: 22px; line-height: 1.5;
+    color: var(--muted);
+    max-width: 800px;
+  }
+  .s3 .takeaway strong { color: var(--ink); font-weight: 600; }
+
+  /* ============================================================ */
+  /* SLIDE 4 — 3 LECCIONES                                        */
+  /* ============================================================ */
+  .s4 h1 { font-size: 60px; margin-top: 32px; }
+  .s4 .lessons {
+    margin-top: 80px;
+    display: flex; flex-direction: column;
+    gap: 48px;
+  }
+  .s4 .lesson {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    gap: 32px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .s4 .lesson:last-child { border-bottom: 0; }
+  .s4 .lesson .n {
+    font-family: 'Instrument Serif', serif;
+    font-size: 56px; line-height: 1; color: var(--accent);
+    font-style: italic;
+  }
+  .s4 .lesson .text {
+    font-size: 22px; line-height: 1.4; color: var(--ink);
+  }
+  .s4 .lesson .text strong { font-weight: 600; }
+  .s4 .lesson .text .sub {
+    display: block;
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 19px;
+  }
+
+  /* ============================================================ */
+  /* SLIDE 5 — v2: LOS 4 PATRONES                                 */
+  /* ============================================================ */
+  .s5 h1 { font-size: 56px; margin-top: 32px; line-height: 1.15; }
+  .s5 .patterns {
+    margin-top: 64px;
+    display: grid; gap: 32px;
+  }
+  .s5 .pattern {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 24px;
+    padding: 24px 0;
+    border-top: 1px solid var(--rule);
+  }
+  .s5 .pattern:last-child { border-bottom: 1px solid var(--rule); }
+  .s5 .pattern .n {
+    font-family: 'Geist Mono', monospace;
+    font-size: 28px; font-weight: 600;
+    color: var(--accent);
+    padding-top: 4px;
+  }
+  .s5 .pattern .title {
+    font-size: 24px; font-weight: 600; color: var(--ink);
+    line-height: 1.3;
+  }
+  .s5 .pattern .desc {
+    margin-top: 8px;
+    font-size: 19px; color: var(--muted);
+    line-height: 1.4;
+  }
+
+  /* ============================================================ */
+  /* SLIDE 6 — SNIPPET                                            */
+  /* ============================================================ */
+  .s6 h1 { font-size: 64px; margin-top: 32px; }
+  .s6 .lead {
+    font-size: 24px; line-height: 1.5;
+    color: var(--muted);
+    margin-top: 36px;
+  }
+  .s6 pre.code {
+    margin-top: 56px;
+    padding: 32px 36px;
+    background: var(--paper-2);
+    border-radius: 6px;
+    border: 1px solid var(--rule);
+    font-family: 'Geist Mono', monospace;
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--ink);
+    overflow: hidden;
+    white-space: pre;
+  }
+  .s6 pre.code .key { color: var(--accent); font-weight: 500; }
+  .s6 pre.code .comment { color: var(--soft); font-style: italic; }
+  .s6 .takeaway {
+    margin-top: 56px;
+    font-size: 22px; line-height: 1.5;
+    color: var(--ink);
+    max-width: 820px;
+  }
+  .s6 .takeaway strong { color: var(--accent); }
+
+  /* ============================================================ */
+  /* SLIDE 7 — RESULTADOS                                         */
+  /* ============================================================ */
+  .s7 h1 { font-size: 64px; margin-top: 32px; }
+  .s7 .grid {
+    margin-top: 64px;
+    display: grid;
+    grid-template-columns: 1.4fr 0.8fr 0.8fr 0.8fr;
+    gap: 0 24px;
+    align-items: center;
+    border-top: 1px solid var(--rule);
+  }
+  .s7 .grid > div {
+    border-bottom: 1px solid var(--rule);
+    padding: 22px 0;
+  }
+  .s7 .grid .head {
+    font-family: 'Geist Mono', monospace;
+    font-size: 14px; font-weight: 500;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--soft);
+    border-bottom: 1px solid var(--rule-solid);
+  }
+  .s7 .grid .label  { font-size: 20px; font-weight: 500; color: var(--ink); }
+  .s7 .grid .v1     { font-family: 'Geist Mono', monospace; font-size: 22px; color: var(--muted); text-align: right; }
+  .s7 .grid .v2     { font-family: 'Geist Mono', monospace; font-size: 22px; font-weight: 600; color: var(--ink); text-align: right; }
+  .s7 .grid .delta  { text-align: right; }
+  .s7 .grid .delta .chip {
+    font-family: 'Geist Mono', monospace;
+    font-size: 16px; font-weight: 500;
+    padding: 6px 12px; border-radius: 4px;
+    background: var(--accent-tint);
+    color: var(--accent);
+    border: 1px solid rgba(181,82,58,0.25);
+  }
+  .s7 .grid .delta .chip.muted {
+    background: transparent;
+    color: var(--muted);
+    border-color: var(--rule);
+  }
+
+  /* ============================================================ */
+  /* SLIDE 8 — CTA                                                */
+  /* ============================================================ */
+  .s8 h1 { font-size: 78px; margin-top: 32px; }
+  .s8 .sub {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: 32px; color: var(--muted);
+    line-height: 1.3;
+    margin-top: 36px;
+    max-width: 800px;
+  }
+  .s8 .repos {
+    margin-top: 80px;
+    padding: 32px 0;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .s8 .repos .row {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 20px;
+    align-items: baseline;
+  }
+  .s8 .repos .role {
+    font-family: 'Geist Mono', monospace;
+    font-size: 14px; font-weight: 500;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--soft);
+  }
+  .s8 .repos .url {
+    font-family: 'Geist Mono', monospace;
+    font-size: 18px; color: var(--ink);
+  }
+  .s8 .article-cta {
+    margin-top: 56px;
+    font-size: 22px; line-height: 1.5;
+    color: var(--ink);
+  }
+  .s8 .article-cta .arrow { color: var(--accent); font-weight: 600; }
+
+</style>
+</head>
+<body>
+
+<!-- ====================================================================
+SLIDE 1 — COVER
+==================================================================== -->
+<section class="slide s1">
+  <p class="eyebrow">Experimento Multiagente · Mayo 2026</p>
+
+  <div class="stack">
+    <h1>Construí el mismo MVP dos veces con 5 agentes IA</h1>
+    <p class="sub">La segunda vez me costó 57% menos, 73% menos tiempo, y necesitó 75% menos intervenciones mías.</p>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <span class="label">v1</span>
+      <span class="values">3h · $4.21 · 12 manos</span>
+    </div>
+    <div class="stat focal">
+      <span class="label">v2</span>
+      <span class="values">49 min · $1.80 · 3 manos</span>
+    </div>
+  </div>
+
+  <div class="footer-mark">
+    <span class="brand">Rubén Aros · @rubenaros</span>
+    <span class="swipe">→ Swipe</span>
+  </div>
+</section>
+
+
+<!-- ====================================================================
+SLIDE 2 — EL EXPERIMENTO
+==================================================================== -->
+<section class="slide s2">
+  <p class="eyebrow">01 · El experimento</p>
+  <h1>PetDesk — recepcionista IA para peluquerías caninas.</h1>
+  <p class="lede">MVP web: chat de reservas + dashboard del groomer + <em>backfill</em> automático de cancelaciones. Construido con 5 agentes IA trabajando en paralelo, orquestados como un tablero Kanban.</p>
+
+  <p class="stack-title">Stack</p>
+  <div class="stack-list">
+    <div class="row"><span class="role">Orquestador</span><span class="what">Multica self-host (32k ⭐, Docker)</span></div>
+    <div class="row"><span class="role">Modelos</span><span class="what">Kimi K2.6 + DeepSeek V3.2 vía OpenRouter</span></div>
+    <div class="row"><span class="role">CLI agente</span><span class="what">OpenCode</span></div>
+    <div class="row"><span class="role">Repo + CI</span><span class="what">GitHub + GitHub Actions</span></div>
+    <div class="row"><span class="role">Deploy</span><span class="what">Vercel (auto-deploy en push)</span></div>
+  </div>
+
+  <div class="footer-mark">
+    <span class="brand">Rubén Aros</span>
+    <span class="swipe">→ 2 / 8</span>
+  </div>
+</section>
+
+
+<!-- ====================================================================
+SLIDE 3 — v1: EL DOLOR
+==================================================================== -->
+<section class="slide s3">
+  <p class="eyebrow">02 · v1 — Lo que no hacer</p>
+  <h1>12 errores. <span class="accent-num">3 horas.</span> <span class="accent-num">$4.21.</span></h1>
+
+  <div class="quote-block">
+    <p class="lead">El error más caro</p>
+    <p class="body">"Le pedí al primer agente que scaffoldeara Next.js con <code>create-next-app</code>. El comando hizo <code>git init</code> fresco y me borró el remote a GitHub, el plan del repo, y todo el contexto. 5 minutos, $0.40 quemados, 0 PRs."</p>
+  </div>
+
+  <p class="takeaway"><strong>Lección:</strong> los scaffolders agresivos no se mezclan con repos preexistentes. <strong>El arquitecto scaffoldea; los agentes construyen encima.</strong></p>
+
+  <div class="footer-mark">
+    <span class="brand">Rubén Aros</span>
+    <span class="swipe">→ 3 / 8</span>
+  </div>
+</section>
+
+
+<!-- ====================================================================
+SLIDE 4 — LAS 3 LECCIONES
+==================================================================== -->
+<section class="slide s4">
+  <p class="eyebrow">03 · Lo que destilé</p>
+  <h1>Las 3 lecciones que cambiaron todo.</h1>
+
+  <div class="lessons">
+    <div class="lesson">
+      <span class="n">i.</span>
+      <div class="text">
+        <strong>El arquitecto define contratos y scaffoldea.</strong>
+        <span class="sub">El agente nunca toca esos archivos. Lo creativo va a él; lo mecánico, a ti.</span>
+      </div>
+    </div>
+    <div class="lesson">
+      <span class="n">ii.</span>
+      <div class="text">
+        <strong>"No toques X" no es contrato</strong> — es una sugerencia que el LLM ignora cuando le conviene.
+        <span class="sub">Necesitas enforcement estructural: CODEOWNERS, branch protection, tests que fallen si lo viola.</span>
+      </div>
+    </div>
+    <div class="lesson">
+      <span class="n">iii.</span>
+      <div class="text">
+        <strong>Los costos reales son 3 a 5× las estimaciones single-call.</strong>
+        <span class="sub">Por el re-envío de contexto en agentes con muchos tool calls. Mide en OpenRouter, no estimes.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-mark">
+    <span class="brand">Rubén Aros</span>
+    <span class="swipe">→ 4 / 8</span>
+  </div>
+</section>
+
+
+<!-- ====================================================================
+SLIDE 5 — v2: LOS 4 PATRONES
+==================================================================== -->
+<section class="slide s5">
+  <p class="eyebrow">04 · v2 — Los 4 patrones</p>
+  <h1>Lo que metí en el template antes de invocar un solo agente.</h1>
+
+  <div class="patterns">
+    <div class="pattern">
+      <span class="n">01</span>
+      <div>
+        <p class="title">Template completo</p>
+        <p class="desc">Scaffold + configs + CI + <code>.gitignore</code> agresivo + ESLint tuneado. Los agentes ya no scaffoldean nada.</p>
+      </div>
+    </div>
+    <div class="pattern">
+      <span class="n">02</span>
+      <div>
+        <p class="title">Contratos como tests ejecutables</p>
+        <p class="desc">Funciones property-based con fast-check. Si la implementación del agente no las pasa, CI rojo. No es markdown — es enforcement real.</p>
+      </div>
+    </div>
+    <div class="pattern">
+      <span class="n">03</span>
+      <div>
+        <p class="title"><code>CONSTITUTION.md</code> + <code>CODEOWNERS</code></p>
+        <p class="desc">Reglas duras + bloqueo estructural sobre <code>src/domain/</code>. Sin OpenSpec ni Spec-Kit — los probé y no encajan.</p>
+      </div>
+    </div>
+    <div class="pattern">
+      <span class="n">04</span>
+      <div>
+        <p class="title">Cost routing por agente</p>
+        <p class="desc">Frontend en DeepSeek V3.2 (4× más barato). Lógica + QA en Kimi K2.6. Calidad indistinguible para UI mecánica.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-mark">
+    <span class="brand">Rubén Aros</span>
+    <span class="swipe">→ 5 / 8</span>
+  </div>
+</section>
+
+
+<!-- ====================================================================
+SLIDE 6 — SNIPPET (el patrón estrella)
+==================================================================== -->
+<section class="slide s6">
+  <p class="eyebrow">05 · El patrón clave</p>
+  <h1>Spec ejecutable, no markdown.</h1>
+
+  <p class="lead">Una suite property-based parametrizada. Cualquier implementación de la interfaz debe pasarla — o CI rojo.</p>
+
+<pre class="code"><span class="comment">// tests/contracts/SchedulerPort.contract.ts</span>
+<span class="key">export function</span> schedulerPortContract(makeSut: () =&gt; Factory) {
+  describe(<span class="key">'SchedulerPort'</span>, () =&gt; {
+    it(<span class="key">'cancel devuelve candidates FIFO por createdAt'</span>);
+    it(<span class="key">'cancel filtra candidates por serviceId'</span>);
+    it(<span class="key">'cancel filtra por ventana (fuera del slot NO matchea)'</span>);
+  });
+}
+
+<span class="comment">// tests/engine.test.ts (escrito por el agente Dev Motor)</span>
+schedulerPortContract(() =&gt; ({
+  scheduler: <span class="key">new</span> Scheduler(repo, clock), repo, clock
+}));
+</pre>
+
+  <p class="takeaway"><strong>El test es el contrato.</strong> El agente no puede "interpretarlo" mal — si su implementación no pasa, no se mergea.</p>
+
+  <div class="footer-mark">
+    <span class="brand">Rubén Aros</span>
+    <span class="swipe">→ 6 / 8</span>
+  </div>
+</section>
+
+
+<!-- ====================================================================
+SLIDE 7 — RESULTADOS
+==================================================================== -->
+<section class="slide s7">
+  <p class="eyebrow">06 · Resultados (medidos en OpenRouter)</p>
+  <h1>Mismo producto, mismos modelos. Distinto proceso.</h1>
+
+  <div class="grid">
+    <div class="head label">Métrica</div>
+    <div class="head v1">v1</div>
+    <div class="head v2">v2</div>
+    <div class="head delta">Δ</div>
+
+    <div class="label">Costo OpenRouter</div>
+    <div class="v1">$4.21</div>
+    <div class="v2">$1.80</div>
+    <div class="delta"><span class="chip">−57%</span></div>
+
+    <div class="label">Tiempo de reloj</div>
+    <div class="v1">~3 h</div>
+    <div class="v2">49 min</div>
+    <div class="delta"><span class="chip">−73%</span></div>
+
+    <div class="label">Intervenciones humanas</div>
+    <div class="v1">~12</div>
+    <div class="v2">3</div>
+    <div class="delta"><span class="chip muted">−75%</span></div>
+
+    <div class="label">Tests al cierre</div>
+    <div class="v1">18</div>
+    <div class="v2">31</div>
+    <div class="delta"><span class="chip muted">+72%</span></div>
+
+    <div class="label">Scope violations</div>
+    <div class="v1">2</div>
+    <div class="v2">0</div>
+    <div class="delta"><span class="chip muted">✓</span></div>
+
+    <div class="label">PRs limpios al 1er intento</div>
+    <div class="v1">3/4</div>
+    <div class="v2">4/4</div>
+    <div class="delta"><span class="chip muted">✓</span></div>
+  </div>
+
+  <div class="footer-mark">
+    <span class="brand">Rubén Aros</span>
+    <span class="swipe">→ 7 / 8</span>
+  </div>
+</section>
+
+
+<!-- ====================================================================
+SLIDE 8 — CTA
+==================================================================== -->
+<section class="slide s8">
+  <p class="eyebrow">07 · ¿Quieres probarlo?</p>
+  <h1>Empieza por el template.</h1>
+  <p class="sub">El resto se ordena solo: contratos + CONSTITUTION + cost routing hacen el 80% del trabajo de disciplina.</p>
+
+  <div class="repos">
+    <div class="row">
+      <span class="role">v1 — el caos</span>
+      <span class="url">github.com/rubenaros/petdesk</span>
+    </div>
+    <div class="row">
+      <span class="role">v2 — el template</span>
+      <span class="url">github.com/rubenaros/petdesk-v2</span>
+    </div>
+    <div class="row">
+      <span class="role">Docs + scripts</span>
+      <span class="url">github.com/rubenaros/AgentCode</span>
+    </div>
+  </div>
+
+  <p class="article-cta">El experimento completo, los 12 errores y los snippets reales <span class="arrow">→</span> Medium (link en el post).</p>
+
+  <div class="footer-mark">
+    <span class="brand">Rubén Aros · @rubenaros</span>
+    <span class="swipe">Gracias · 8 / 8</span>
+  </div>
+</section>
+
+</body>
+</html>
