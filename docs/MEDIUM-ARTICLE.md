@@ -25,6 +25,8 @@ ANTES DE PUBLICAR:
 
 *Construí dos veces la misma app con un orquestador multiagente. El v2 me costó 57% menos, 73% menos tiempo, y necesitó 75% menos intervenciones mías. Esto es lo que hice mal el primer intento y lo que cambié.*
 
+![PetDesk v1 vs v2 — comparativo de costo, tiempo, intervenciones y calidad](./hero-v1-vs-v2.png)
+
 ---
 
 Hace dos semanas decidí probar algo concreto: armar un MVP real con varios agentes IA "trabajadores", no con un solo agente como Copilot. Quería ver si la promesa del "Kanban con agentes IA" era humo o tenía sustancia. Elegí construir **PetDesk** — una mini-SaaS de recepcionista IA para peluquerías caninas (chat de reservas + dashboard + *backfill* de cancelaciones).
