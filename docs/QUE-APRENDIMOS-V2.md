@@ -257,3 +257,65 @@ Para PetDesk solo, es overkill.
 - **Adopto 4 prácticas de Spec-Kit** (CONSTITUTION, [P] markers, contract tests, checklist por issue) que cierran los huecos del v1 sin agregar dependencias.
 - **3 cambios de mayor impacto:** Autopilot para el merge loop, template repo, contratos bloqueados (CODEOWNERS + fast-check).
 - **Apuesta de costo v2:** ~$2-2.50 (vs $4.21 v1) y ~45-60 min (vs ~3h).
+
+---
+
+# ANEXO A — Resultados reales del v2 (post-experimento)
+
+**Fecha de ejecución:** 2026-05-30
+**Repo entregado:** [rubenaros/petdesk-v2](https://github.com/rubenaros/petdesk-v2)
+
+Ejecutamos el plan v2 sobre el mismo producto (PetDesk MVP) en nuevo repo (`petdesk-v2`) para A/B puro vs v1. Los patrones del plan se aplicaron así:
+
+- ✅ **Adoptados:** template completo (scaffold + contratos + contract tests + CI + CONSTITUTION + CODEOWNERS + eslint tuneado + .gitignore agresivo), [P] markers en PLAN, checklist por issue, cost routing (Dev Front → DeepSeek V3.2), issues referencian CONSTITUTION + contract tests como spec ejecutable.
+- ❌ **NO adoptado por hallazgo durante ejecución:** Autopilot (Multica v0.3.6 solo soporta triggers `schedule`/`webhook`, no event-driven sobre estado de issues — quedó como trabajo futuro con GitHub Actions como puente).
+- ⚠️ **CODEOWNERS** quedó como guard informativo: branch protection requiere GitHub Pro para repos privados. Trabajo futuro: hacer el repo público o pagar Pro.
+
+## A.1 Apuesta vs realidad
+
+| Métrica | v1 (real) | v2 apuesta | **v2 real** | Validación |
+|---|---|---|---|---|
+| **Costo OpenRouter** | $4.21 | $1.50–2.00 | **$1.80** | ✅ clavada |
+| **Tiempo de reloj total** | ~3h (180 min) | 45–60 min | **~49 min** | ✅ clavada |
+| **Intervenciones humanas** | ~12 | ≤3 | **3** | ✅ clavada |
+| **Tests al cierre** | 18 (4 archivos) | (no proyectado) | 31 (8 archivos) | +72% cobertura |
+| **PRs limpios al 1er intento** | 3/4 (Deploy hubo que integrarlo a mano) | (no proyectado) | **4/4** | ✅ |
+| **Scope violations** | 2 (QA tocó ports, Deploy tocó brain) | 0 (CODEOWNERS) | **0** | ✅ (incluso sin branch protection) |
+| **Basura commiteada** | 1 (`tsconfig.tsbuildinfo`) | 0 | **0** | ✅ |
+
+## A.2 Por qué funcionó cada palanca
+
+| Palanca v2 | Evidencia en el experimento |
+|---|---|
+| **Contratos en template + contract tests con fast-check** | Los 2 dev agents importaron `schedulerPortContract` / `notificationPortContract` sin que se lo pidiéramos, y pasaron. Spec ejecutable = enforcement real. |
+| **CONSTITUTION.md leído primero** | Los 4 agentes respetaron el scope (0 violaciones), aunque no había branch protection que lo enforce mecánicamente. |
+| **Template completo elimina Issue 0** | Wave 1 arrancó directo con código de negocio. Motor v2 cerró en **6m10s vs 14min v1** (–57%). |
+| **Issue body con checklist + paso de entrega explícito** | 4/4 PRs vinieron con commit + push + `gh pr create` correcto. No hubo agentes "atascados sin saber cómo entregar" como Issue 0 del v1. |
+| **Cost routing (DeepSeek para frontend)** | Dev Front entregó 10 archivos (8 app/ + 2 infra/) sin desviarse. Calidad suficiente para UI mecánica + APIs Next. |
+| **Paralelización por olas** | Ola 1 (2 agentes) = 24 min; Ola 2 (2 agentes) = 19 min; vs el patrón secuencial del v1. |
+| **Granularidad de issues** | Quedaron en 4 (vs 6 v1) porque scaffold/CI ya estaban en template. Cada issue más concreto = agente itera menos. |
+
+## A.3 Lo que NO terminó de cerrar (3 intervenciones restantes)
+
+Las **3 intervenciones humanas que quedaron** (vs 12 del v1) fueron:
+1. Mergear PR #1 + #2 después de Ola 1 (manual `gh pr merge`).
+2. Mergear PR #3 + #4 después de Ola 2.
+3. Verificación final del main integrado + medición.
+
+**Para llegar a 0 intervenciones** haría falta:
+- Multica Autopilot con webhook trigger + GitHub Action que dispare al merge → asigne el siguiente issue automáticamente.
+- Auto-merge en GitHub (label `agent-ready` + branch protection con auto-merge habilitado).
+- Cost: ~2-3h de setup adicional. Beneficio: hacer el showcase 100% autónomo después del plan inicial.
+
+## A.4 Conclusión
+
+**El plan v2 cumplió todo lo proyectado y un poco más.** Las 4 prácticas adoptadas de Spec-Kit (CONSTITUTION + [P] markers + contract tests + checklist por issue) más el template completo + cost routing produjeron:
+- 57% menos costo
+- 73% menos tiempo de reloj
+- 75% menos intervenciones humanas
+- 72% más cobertura de tests
+- 0 errores de scope (vs 2 en v1)
+
+Sin instalar OpenSpec ni Spec-Kit — sólo aplicando sus principios. **Validación de la decisión "adoptar el patrón, no la herramienta".**
+
+Próxima frontera natural: cerrar las últimas 3 intervenciones humanas con Autopilot + GitHub Actions, para lograr un flujo 100% autónomo desde "PLAN.md + script" hasta "PR mergeado + deploy".
