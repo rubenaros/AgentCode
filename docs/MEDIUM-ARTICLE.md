@@ -115,23 +115,35 @@ Con las lecciones decidí rehacer el mismo producto en un repo nuevo (`petdesk-v
 2. **`src/domain/`** con tipos + interfaces correctas. Los contratos del producto, escritos por mí.
 3. **`tests/contracts/*.contract.ts`** — la spec ejecutable. Funciones *property-based* con fast-check que cualquier implementación debe pasar:
 
-   ```ts
-   export function schedulerPortContract(makeSut: () => SchedulerFactory) {
-     describe('SchedulerPort — contract', () => {
-       it('cancel devuelve candidates FIFO por createdAt', () => { /* … */ });
-       it('cancel filtra candidates por serviceId', () => { /* … */ });
-       it('cancel filtra por ventana (fuera del slot NO matchea)', () => { /* … */ });
-     });
-   }
-   ```
+```ts
+export function schedulerPortContract(makeSut: () => SchedulerFactory) {
+  describe('SchedulerPort - contract', () => {
+    it('cancel devuelve candidates FIFO por createdAt', () => { /* ... */ });
+    it('cancel filtra candidates por serviceId', () => { /* ... */ });
+    it('cancel filtra por ventana (fuera del slot NO matchea)', () => { /* ... */ });
+  });
+}
+```
 
-   Cuando el agente Dev Motor implementa `Scheduler`, su test file simplemente escribe:
+<!-- MEDIUM TIP: en Medium reemplaza el bloque de arriba pegando esta URL en una línea sola (Medium auto-embebe el Gist con syntax highlight):
+https://gist.github.com/rubenaros/ddb96c7db20ad84e484b938e52bc6a39
+-->
 
-   ```ts
-   schedulerPortContract(() => ({ scheduler: new Scheduler(repo, clock), repo, clock }));
-   ```
+Cuando el agente Dev Motor implementa `Scheduler`, su test file simplemente escribe:
 
-   Si su implementación no pasa, CI rojo. **Spec ejecutable, no markdown.** Esto es lo que ningún framework de SDD (OpenSpec, GitHub Spec-Kit — sí, los probé) entrega out-of-the-box.
+```ts
+schedulerPortContract(() => ({
+  scheduler: new Scheduler(repo, clock),
+  repo,
+  clock,
+}));
+```
+
+<!-- MEDIUM TIP: para este bloque, pegar:
+https://gist.github.com/rubenaros/a00e368ddf083731fe6280f3288cfaa9
+-->
+
+Si su implementación no pasa, CI rojo. **Spec ejecutable, no markdown.** Esto es lo que ningún framework de SDD (OpenSpec, GitHub Spec-Kit — sí, los probé) entrega out-of-the-box.
 
 4. **`CONSTITUTION.md`** — reglas duras del proyecto: "no uses create-next-app", "no toques `src/domain/`", "entrega como PR usando este comando exacto". Inspirado en el concepto *Constitution* de Spec-Kit pero sin instalar Spec-Kit.
 
