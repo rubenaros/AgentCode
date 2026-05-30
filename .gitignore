@@ -1,0 +1,22 @@
+# Secretos / entorno — NUNCA versionar
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+
+# Dependencias
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Logs / temporales
+*.log
+.DS_Store
+
+# Swap files de editores
+*.swp
+*.swo
+*~
