@@ -22,7 +22,7 @@ ESTADO:
 - [ ] Importar a Medium (https://medium.com/p/import + URL raw del .md).
 -->
 
-# 12 errores con 5 agentes IA y los 4 patrones que arreglaron todo: $4.21 → $1.80 por el mismo MVP
+# Multica + 5 agentes IA: 12 errores en v1, $1.80 y 49 minutos en v2
 
 *Construí dos veces la misma app con un orquestador multiagente. La v2 me costó 57% menos, 73% menos tiempo, y necesitó 75% menos intervenciones mías. Esto es lo que hice mal al primer intento y lo que cambié.*
 
