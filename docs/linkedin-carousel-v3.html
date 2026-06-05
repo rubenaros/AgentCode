@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>LinkedIn Carousel v3 — gentle-ai sobre Multica</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper:       #faf7f2;
+    --paper-2:     #f1ede5;
+    --ink:         #1c1917;
+    --muted:       #57534e;
+    --soft:        #a8a29e;
+    --rule:        rgba(28,25,23,0.12);
+    --rule-solid:  rgba(28,25,23,0.20);
+    --accent:      #b5523a;
+    --accent-tint: rgba(181,82,58,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--paper); }
+  body {
+    font-family: 'Geist', sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  @page { size: 1080px 1350px; margin: 0; }
+  @media print { .slide { page-break-after: always; } }
+
+  .slide {
+    width: 1080px; height: 1350px;
+    padding: 80px 80px 60px;
+    background: var(--paper);
+    position: relative;
+    overflow: hidden;
+    page-break-after: always;
+  }
+  .slide:last-child { page-break-after: auto; }
+
+  .eyebrow {
+    font-family: 'Geist Mono', monospace;
+    font-size: 14px; font-weight: 500;
+    letter-spacing: 0.20em; text-transform: uppercase;
+    color: var(--muted);
+  }
+  h1 {
+    font-family: 'Instrument Serif', serif;
+    font-weight: 400; line-height: 1.1;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .footer-mark {
+    position: absolute;
+    bottom: 48px; left: 80px; right: 80px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: 'Geist Mono', monospace;
+    font-size: 13px; color: var(--soft);
+    letter-spacing: 0.14em; text-transform: uppercase;
+    border-top: 1px solid var(--rule);
+    padding-top: 20px;
+  }
+  .footer-mark .swipe { color: var(--accent); font-weight: 500; }
+  .footer-mark .brand { color: var(--ink); }
+
+  /* SLIDE 1 — COVER */
+  .s1 h1 { font-size: 76px; margin-top: 56px; }
+  .s1 .sub {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: 30px; color: var(--muted);
+    line-height: 1.3;
+    margin-top: 40px;
+  }
+  .s1 .stats {
+    margin-top: 72px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+  .s1 .stat { padding: 32px 0; display: flex; flex-direction: column; gap: 8px; }
+  .s1 .stat:first-child { padding-right: 32px; border-right: 1px solid var(--rule); }
+  .s1 .stat:last-child  { padding-left: 32px; }
+  .s1 .stat .label {
+    font-family: 'Geist Mono', monospace;
+    font-size: 14px; font-weight: 500;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--soft);
+  }
+  .s1 .stat .values {
+    font-family: 'Geist Mono', monospace;
+    font-size: 21px; font-weight: 600;
+    color: var(--ink);
+  }
+  .s1 .stat.focal .values { color: var(--accent); }
+
+  /* SLIDE 2 — EL EXPERIMENTO */
+  .s2 h1 { font-size: 60px; margin-top: 40px; }
+  .s2 .lede { font-size: 22px; line-height: 1.5; color: var(--muted); margin-top: 32px; }
+  .s2 .vars-title {
+    font-family: 'Geist Mono', monospace;
+    font-size: 14px; font-weight: 500;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--soft);
+    margin-top: 60px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .s2 .vars { margin-top: 24px; display: grid; gap: 16px; }
+  .s2 .vars .row {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 24px;
+    font-size: 20px;
+  }
+  .s2 .vars .role {
+    font-family: 'Geist Mono', monospace;
+    font-size: 13px; font-weight: 500;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--soft);
+    padding-top: 4px;
+  }
+  .s2 .vars .what { color: var(--ink); font-weight: 500; }
+  .s2 .vars .what.accent { color: var(--accent); font-weight: 600; }
+
+  /* SLIDE 3 — STACK */
+  .s3 h1 { font-size: 52px; margin-top: 32px; }
+  .s3 .layers {
+    margin-top: 56px;
+    display: flex; flex-direction: column;
+    gap: 12px;
+  }
+  .s3 .layer {
+    padding: 18px 24px;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    background: rgba(255,255,255,0.4);
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 20px;
+    align-items: center;
+  }
+  .s3 .layer.focal {
+    background: var(--accent-tint);
+    border-color: var(--accent);
+  }
+  .s3 .layer .n {
+    font-family: 'Geist Mono', monospace;
+    font-size: 12px; font-weight: 500;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--soft);
+  }
+  .s3 .layer.focal .n { color: var(--accent); }
+  .s3 .layer .text {
+    font-size: 18px; color: var(--ink);
+    line-height: 1.4;
+  }
+  .s3 .layer .text strong { font-weight: 600; }
+  .s3 .layer .text .sub {
+    display: block;
+    font-family: 'Geist Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .s3 .takeaway {
+    margin-top: 40px;
+    font-size: 20px;
+    line-height: 1.5;
+    color: var(--ink);
+    font-style: italic;
+    font-family: 'Instrument Serif', serif;
+  }
+  .s3 .takeaway strong { font-style: normal; color: var(--accent); }
+
+  /* SLIDE 4 — RESULTADOS */
+  .s4 h1 { font-size: 56px; margin-top: 32px; }
+  .s4 .lede { font-size: 20px; color: var(--muted); margin-top: 24px; }
+  .s4 .grid {
+    margin-top: 48px;
+    display: grid;
+    grid-template-columns: 1.5fr 0.7fr 0.7fr 0.7fr;
+    column-gap: 24px;
+    align-items: center;
+    border-top: 1px solid var(--rule);
+  }
+  .s4 .grid > div {
+    border-bottom: 1px solid var(--rule);
+    padding: 20px 0;
+  }
+  .s4 .grid .head {
+    font-family: 'Geist Mono', monospace;
+    font-size: 13px; font-weight: 500;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--soft);
+    border-bottom: 1px solid var(--rule-solid);
+  }
+  .s4 .grid .label { font-size: 19px; font-weight: 500; color: var(--ink); }
+  .s4 .grid .v2 { font-family: 'Geist Mono', monospace; font-size: 19px; color: var(--muted); text-align: right; }
+  .s4 .grid .v3 { font-family: 'Geist Mono', monospace; font-size: 19px; font-weight: 600; color: var(--ink); text-align: right; }
+  .s4 .grid .delta { text-align: right; }
+  .s4 .grid .delta .chip {
+    font-family: 'Geist Mono', monospace;
+    font-size: 14px; font-weight: 500;
+    padding: 5px 10px; border-radius: 4px;
+    background: var(--accent-tint);
+    color: var(--accent);
+    border: 1px solid rgba(181,82,58,0.25);
+  }
+  .s4 .grid .delta .chip.muted {
+    background: transparent;
+    color: var(--muted);
+    border-color: var(--rule);
+  }
+  .s4 .grid .delta .chip.new {
+    background: transparent;
+    color: var(--ink);
+    border-color: var(--rule-solid);
+  }
+
+  /* SLIDE 5 — LO QUE SÍ DIO */
+  .s5 h1 { font-size: 60px; margin-top: 32px; }
+  .s5 .lede { font-size: 20px; color: var(--muted); margin-top: 28px; }
+  .s5 .memory-block {
+    margin-top: 56px;
+    padding: 32px 36px;
+    background: var(--paper-2);
+    border-radius: 6px;
+    border: 1px solid var(--rule);
+  }
+  .s5 .memory-block .head {
+    font-family: 'Geist Mono', monospace;
+    font-size: 13px; font-weight: 500;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+  .s5 .memory-block .body {
+    font-family: 'Geist Mono', monospace;
+    font-size: 15px; line-height: 1.55;
+    color: var(--ink);
+  }
+  .s5 .memory-block .body .field { color: var(--accent); font-weight: 600; }
+  .s5 .takeaway {
+    margin-top: 48px;
+    font-size: 20px; line-height: 1.5;
+    color: var(--ink);
+  }
+  .s5 .takeaway strong { color: var(--accent); }
+
+  /* SLIDE 6 — LO QUE CUESTA */
+  .s6 h1 { font-size: 70px; margin-top: 40px; }
+  .s6 h1 .accent { color: var(--accent); font-style: italic; }
+  .s6 .quote-block {
+    margin-top: 72px;
+    padding: 40px;
+    background: var(--accent-tint);
+    border-left: 4px solid var(--accent);
+    border-radius: 4px;
+  }
+  .s6 .quote-block .lead {
+    font-family: 'Geist Mono', monospace;
+    font-size: 14px; font-weight: 500;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+  .s6 .quote-block .body {
+    font-family: 'Instrument Serif', serif;
+    font-size: 28px; line-height: 1.4;
+    color: var(--ink);
+  }
+  .s6 .takeaway {
+    margin-top: 64px;
+    font-size: 20px; line-height: 1.5;
+    color: var(--muted);
+  }
+  .s6 .takeaway strong { color: var(--ink); font-weight: 600; }
+
+  /* SLIDE 7 — VEREDICTO */
+  .s7 h1 { font-size: 56px; margin-top: 32px; }
+  .s7 .cases {
+    margin-top: 56px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+  .s7 .case {
+    padding: 28px;
+    border-radius: 6px;
+    border: 1px solid var(--rule);
+  }
+  .s7 .case.no { background: rgba(255,255,255,0.4); }
+  .s7 .case.yes { background: var(--accent-tint); border-color: var(--accent); }
+  .s7 .case .title {
+    font-family: 'Geist Mono', monospace;
+    font-size: 14px; font-weight: 500;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .s7 .case.no .title { color: var(--soft); }
+  .s7 .case.yes .title { color: var(--accent); }
+  .s7 .case ul { list-style: none; padding: 0; margin: 0; }
+  .s7 .case li {
+    font-size: 16px;
+    line-height: 1.45;
+    padding-left: 20px;
+    position: relative;
+    margin-bottom: 12px;
+    color: var(--ink);
+  }
+  .s7 .case li::before {
+    content: '·';
+    position: absolute;
+    left: 6px;
+    color: var(--muted);
+    font-weight: 700;
+  }
+
+  /* SLIDE 8 — CTA */
+  .s8 h1 { font-size: 72px; margin-top: 32px; }
+  .s8 .sub {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: 30px; color: var(--muted);
+    line-height: 1.3;
+    margin-top: 32px;
+  }
+  .s8 .repos {
+    margin-top: 64px;
+    padding: 32px 0;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .s8 .repos .row {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 20px;
+    align-items: baseline;
+  }
+  .s8 .repos .role {
+    font-family: 'Geist Mono', monospace;
+    font-size: 13px; font-weight: 500;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--soft);
+  }
+  .s8 .repos .url {
+    font-family: 'Geist Mono', monospace;
+    font-size: 17px; color: var(--ink);
+  }
+  .s8 .article-cta {
+    margin-top: 48px;
+    font-size: 20px; line-height: 1.5; color: var(--ink);
+  }
+  .s8 .article-cta .arrow { color: var(--accent); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1 — COVER -->
+<section class="slide s1">
+  <p class="eyebrow">Experimento Multiagente · v3 · gentle-ai overlay</p>
+  <h1>Le agregué gentle-ai al stack del v2.</h1>
+  <p class="sub">Mismo repo, mismos agentes, mismos modelos. Esto es lo que costó.</p>
+  <div class="stats">
+    <div class="stat">
+      <span class="label">v2 (sin gentle-ai)</span>
+      <span class="values">$1.80 · 49 min · 0 memorias</span>
+    </div>
+    <div class="stat focal">
+      <span class="label">v3 (con gentle-ai)</span>
+      <span class="values">$2.17 · 70 min · 3 memorias</span>
+    </div>
+  </div>
+  <div class="footer-mark">
+    <span class="brand">Rubén Aros · @rubenaros</span>
+    <span class="swipe">→ Swipe</span>
+  </div>
+</section>
+
+<!-- SLIDE 2 — EL EXPERIMENTO -->
+<section class="slide s2">
+  <p class="eyebrow">01 · El experimento</p>
+  <h1>A/B puro: solo cambia el overlay.</h1>
+  <p class="lede">Mismo petdesk-v2 ya construido. Agregué una feature nueva (Stats Dashboard) con los mismos 4 agentes Kimi+DeepSeek que armaron el v2.</p>
+
+  <p class="vars-title">Lo que NO cambió vs v2</p>
+  <div class="vars">
+    <div class="row"><span class="role">Orquestador</span><span class="what">Multica self-host</span></div>
+    <div class="row"><span class="role">CLI agente</span><span class="what">opencode</span></div>
+    <div class="row"><span class="role">Modelos</span><span class="what">Kimi K2.6 + DeepSeek V3.2</span></div>
+    <div class="row"><span class="role">Disciplina</span><span class="what">CONSTITUTION + contracts + checklist</span></div>
+  </div>
+
+  <p class="vars-title" style="margin-top:48px;">Lo único que cambió</p>
+  <div class="vars">
+    <div class="row"><span class="role">Overlay</span><span class="what accent">gentle-ai dentro de opencode</span></div>
+    <div class="row"><span class="role">Memoria</span><span class="what accent">Engram (HTTP persistente)</span></div>
+    <div class="row"><span class="role">Skills</span><span class="what accent">12 curadas auto-disponibles</span></div>
+  </div>
+
+  <div class="footer-mark">
+    <span class="brand">Rubén Aros</span>
+    <span class="swipe">→ 2 / 8</span>
+  </div>
+</section>
+
+<!-- SLIDE 3 — STACK -->
+<section class="slide s3">
+  <p class="eyebrow">02 · Dónde encaja gentle-ai</p>
+  <h1>No compite con Multica. Vive una capa más abajo.</h1>
+
+  <div class="layers">
+    <div class="layer">
+      <span class="n">Capa 4</span>
+      <span class="text"><strong>Arquitecto (tú)</strong><span class="sub">Define contratos, CONSTITUTION</span></span>
+    </div>
+    <div class="layer">
+      <span class="n">Capa 3</span>
+      <span class="text"><strong>Repo</strong><span class="sub">PLAN.md, src/domain/, tests/contracts/</span></span>
+    </div>
+    <div class="layer">
+      <span class="n">Capa 2</span>
+      <span class="text"><strong>Multica</strong><span class="sub">Orquesta MACRO — features paralelas en Kanban</span></span>
+    </div>
+    <div class="layer">
+      <span class="n">Capa 1</span>
+      <span class="text"><strong>opencode</strong><span class="sub">Runner que Multica lanza por issue</span></span>
+    </div>
+    <div class="layer focal">
+      <span class="n">Capa 0</span>
+      <span class="text"><strong>gentle-ai overlay</strong><span class="sub">Dentro de opencode — orquesta MICRO (fases SDD por feature)</span></span>
+    </div>
+  </div>
+
+  <p class="takeaway">Multica orquesta features. <strong>gentle-ai orquesta fases.</strong> No se pisan — se complementan.</p>
+
+  <div class="footer-mark">
+    <span class="brand">Rubén Aros</span>
+    <span class="swipe">→ 3 / 8</span>
+  </div>
+</section>
+
+<!-- SLIDE 4 — RESULTADOS -->
+<section class="slide s4">
+  <p class="eyebrow">03 · Resultados (medidos en OpenRouter)</p>
+  <h1>El overhead es real y predecible.</h1>
+  <p class="lede">v2 hizo 4 issues, v3 hizo 3 — comparo per-issue donde aplica.</p>
+
+  <div class="grid">
+    <div class="head label">Métrica</div>
+    <div class="head v2">v2</div>
+    <div class="head v3">v3</div>
+    <div class="head delta">Δ</div>
+
+    <div class="label">Costo por issue</div>
+    <div class="v2">$0.45</div>
+    <div class="v3">$0.72</div>
+    <div class="delta"><span class="chip">+60%</span></div>
+
+    <div class="label">Tiempo por issue</div>
+    <div class="v2">~12 min</div>
+    <div class="v3">~23 min</div>
+    <div class="delta"><span class="chip">+92%</span></div>
+
+    <div class="label">Costo OpenRouter total</div>
+    <div class="v2">$1.80</div>
+    <div class="v3">$2.17</div>
+    <div class="delta"><span class="chip muted">+21%</span></div>
+
+    <div class="label">Tests al cierre</div>
+    <div class="v2">31</div>
+    <div class="v3">48</div>
+    <div class="delta"><span class="chip muted">+55%</span></div>
+
+    <div class="label">Memorias persistidas</div>
+    <div class="v2">0</div>
+    <div class="v3">3</div>
+    <div class="delta"><span class="chip new">nuevo</span></div>
+
+    <div class="label">Detección de specs mal escritos</div>
+    <div class="v2">no</div>
+    <div class="v3">sí</div>
+    <div class="delta"><span class="chip new">nuevo</span></div>
+  </div>
+
+  <div class="footer-mark">
+    <span class="brand">Rubén Aros</span>
+    <span class="swipe">→ 4 / 8</span>
+  </div>
+</section>
+
+<!-- SLIDE 5 — LO QUE SÍ DIO -->
+<section class="slide s5">
+  <p class="eyebrow">04 · Lo que sí me dio</p>
+  <h1>Razonamiento articulado, no solo código.</h1>
+  <p class="lede">Cada agente persistió una memoria estructurada en Engram. Ejemplo del Dev Motor:</p>
+
+  <div class="memory-block">
+    <p class="head">Engram memory · type: feature · project: petdesk-v2</p>
+    <p class="body">
+<span class="field">What:</span>    Implemented StatsEngine in src/engine/stats.ts<br>
+<span class="field">Why:</span>     Issue ZEN-14 required a stats engine for v3<br>
+<span class="field">Where:</span>   src/engine/stats.ts, tests/engine.stats.test.ts<br>
+<span class="field">Learned:</span> occupancyRate requires intersecting<br>
+         [rangeStart, rangeEnd) with each day's<br>
+         9:00–18:00 UTC window for partial days.<br>
+         Tops need deterministic tie-breaking by id.
+    </p>
+  </div>
+
+  <p class="takeaway"><strong>Eso es razonamiento articulado.</strong> El agente entendió un edge-case sutil y lo dejó escrito como insight reusable. v2 no producía esto.</p>
+
+  <div class="footer-mark">
+    <span class="brand">Rubén Aros</span>
+    <span class="swipe">→ 5 / 8</span>
+  </div>
+</section>
+
+<!-- SLIDE 6 — LO QUE CUESTA -->
+<section class="slide s6">
+  <p class="eyebrow">05 · Lo que cuesta</p>
+  <h1>+60% costo. <span class="accent">+92% tiempo.</span> Sin SDD.</h1>
+
+  <div class="quote-block">
+    <p class="lead">El hallazgo no-obvio</p>
+    <p class="body">"SDD no se activó en ninguno de los 3 issues. El orquestador decidió ir directo cada vez. El +60% costo es el overhead del overlay base — no del flujo SDD."</p>
+  </div>
+
+  <p class="takeaway"><strong>gentle-ai te factura el overhead del overlay aunque no uses SDD.</strong> Skill-registry + Engram + plugins + system prompts custom inyectados en cada call.</p>
+
+  <div class="footer-mark">
+    <span class="brand">Rubén Aros</span>
+    <span class="swipe">→ 6 / 8</span>
+  </div>
+</section>
+
+<!-- SLIDE 7 — VEREDICTO -->
+<section class="slide s7">
+  <p class="eyebrow">06 · El veredicto honesto</p>
+  <h1>No es marketing. Es trade-off.</h1>
+
+  <div class="cases">
+    <div class="case no">
+      <p class="title">NO si</p>
+      <ul>
+        <li>Tu prioridad es velocidad o costo mínimo</li>
+        <li>Trabajas solo y no necesitas audit trail</li>
+        <li>Features chicas y mecánicas</li>
+        <li>No aprovechas memoria cross-session</li>
+      </ul>
+    </div>
+    <div class="case yes">
+      <p class="title">SÍ si</p>
+      <ul>
+        <li>Equipo de 2+ devs compartiendo decisiones</li>
+        <li>Compliance / auditoría estricta</li>
+        <li>Pipeline de features grandes con decisiones de diseño</li>
+        <li>Querés que el agente articule meta-razonamiento</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-mark">
+    <span class="brand">Rubén Aros</span>
+    <span class="swipe">→ 7 / 8</span>
+  </div>
+</section>
+
+<!-- SLIDE 8 — CTA -->
+<section class="slide s8">
+  <p class="eyebrow">07 · El experimento completo</p>
+  <h1>Repos públicos. Números reales.</h1>
+  <p class="sub">Mismo principio que el v2 — todo verificable. Si vas a probarlo, andá despacio y medí.</p>
+
+  <div class="repos">
+    <div class="row">
+      <span class="role">El repo del experimento</span>
+      <span class="url">github.com/rubenaros/petdesk-v2</span>
+    </div>
+    <div class="row">
+      <span class="role">Docs + scripts</span>
+      <span class="url">github.com/rubenaros/AgentCode</span>
+    </div>
+    <div class="row">
+      <span class="role">gentle-ai</span>
+      <span class="url">github.com/Gentleman-Programming/gentle-ai</span>
+    </div>
+  </div>
+
+  <p class="article-cta">Análisis completo, todos los números, las 3 memorias de Engram <span class="arrow">→</span> Medium (link en el post).</p>
+
+  <div class="footer-mark">
+    <span class="brand">Rubén Aros · @rubenaros</span>
+    <span class="swipe">Gracias · 8 / 8</span>
+  </div>
+</section>
+
+</body>
+</html>
