@@ -26,13 +26,20 @@ Tenía dos versiones del mismo sistema de agentes sobre un tablero Kanban. Las d
 
 En números: v2 tenía alrededor de 7 capas; v6 tiene las 13. Lo que v6 sumó es memoria, planificación por máquina, sub-agentes, verificación automática y entrega autónoma.
 
-## Lo que sí comparé (y lo que no)
+## Los números (lo que sí comparé)
 
-Las dos versiones construyeron features distintas: v2 levantó el MVP completo; v6 agregó una feature de estadísticas sobre esa base. Por eso el costo absoluto no dice nada. Lo que sí se puede normalizar:
+Las dos versiones construyeron features distintas: v2 levantó el MVP completo; v6 agregó una feature de estadísticas. Por eso el costo absoluto no dice nada, y comparo por unidad. Aviso de método: tomo el costo de la factura de OpenRouter, no del número que reporta el ejecutor —ese subcuenta de forma inconsistente, entre 1,1 y 1,6 veces por debajo según la medición—.
 
-**Costo por feature.** En v2, el costo por unidad de trabajo era bajo y predecible. En v6, una feature completa con el flujo de especificación costó, en promedio, alrededor del doble por unidad, pero con una variación grande entre corridas: el mismo pedido idéntico osciló hasta 1,8 veces de una corrida a otra. La planificación por máquina no tiene un costo fijo; tiene un costo que cambia según cuánto decida deliberar el agente.
+| Métrica | v2 | v6 (con SDD) |
+|---|---|---|
+| Costo real (OpenRouter) | $1.80 · 4 tareas | ~$3.20 · 3 corridas |
+| Costo por unidad | ~$0.45 / tarea | ~$1.07 / feature (rango $0.60–$1.50) |
+| Tiempo total | ~49 min | ~10–12 min por corrida |
+| Tiempo por unidad | ~12 min / tarea | ~11 min / feature |
+| Tests al cierre | 31 | 39 |
+| Varianza de costo | baja, predecible | ~1,8× entre corridas idénticas |
 
-**Tiempo por feature.** Parejo, e incluso a favor de v6 cuando la feature se entrega en una sola tarea con especificación, en vez de partida en varias. Consolidar evita recargar el contexto del repositorio en cada subtarea.
+Una salvedad sobre las unidades: la "tarea" de v2 es un issue acotado; la "corrida" de v6 entrega la feature entera con su flujo de especificación. No son del mismo tamaño, así que la comparación por unidad es orientativa, no exacta. El tiempo, en cambio, jugó a favor de v6: entregar la feature en una sola corrida con especificación salió más rápido que partirla en varias tareas, porque evita recargar el contexto del repositorio en cada una.
 
 **Retrabajos.** Acá aparece el matiz más útil. En las dos versiones, el código de los agentes salió limpio: pasó los tests, respetó el alcance, sin violaciones. La diferencia no estuvo en el código, sino en la operación. v2 fue tranquila: cuatro PRs limpios al primer intento, y las únicas intervenciones humanas fueron los merges. v6 tuvo más fricción operativa: un corte transitorio del proveedor que obligó a relanzar una corrida, y un detalle de configuración mío —resetear la rama base borró el commit que activaba el CI— que dejó un PR sin integrar. El harness más completo tiene más piezas, y más piezas significan más puntos de falla.
 
@@ -53,6 +60,17 @@ De todo lo que v6 agregó, **lo que claramente rinde son dos capas: la verificac
 Las capas pesadas del overlay —la memoria persistente y la planificación por especificación— son **condicionales**. Medí dos cosas incómodas: la memoria se escribió en cada tarea, pero no encontré evidencia de que se leyera después; y la planificación por máquina costó aproximadamente lo mismo que ir directo, pero con esa variación de 1,8 veces y una capa siempre activa que se paga corra o no. El valor de esas capas aparece en escenarios que no probé: un equipo de varias personas que comparte decisiones, features grandes con muchas alternativas de diseño, o requisitos de auditoría. Para un solo desarrollador y features acotadas, agregan costo y fragilidad sin un retorno que haya podido demostrar.
 
 Dicho de otro modo: **el salto de v2 a "harness completo" mejora sobre todo por dos capas baratas; el resto del harness pesado conviene incorporarlo cuando el escenario lo justifique, no por defecto.** Un harness más completo no es automáticamente mejor. Es más capaz y más caro de operar, y conviene sumar cada capa solo cuando se va a usar.
+
+## Cuándo valen las capas que no usé
+
+Que la memoria y la planificación por especificación no rindieran acá no las descalifica: depende del tamaño y la vida del proyecto. Mi lectura, por escenario:
+
+- **Proyecto muy chico, una sola feature, un desarrollador, descartable:** no las uses. La memoria no tiene a quién servirle —no hay una segunda sesión que la lea— y la planificación por especificación agrega costo y variación sin un plan que valga la pena documentar. El stack mínimo (contratos + CI + auto-merge) alcanza y sobra; acá el overlay pesado es lastre.
+- **Proyecto mediano, varias features, un desarrollador:** la planificación por especificación empieza a pagar en las features con decisiones de diseño reales —varias alternativas, tradeoffs—; en las mecánicas sigue siendo overhead. La memoria todavía rinde poco si se trabaja solo.
+- **Proyecto grande, equipo, larga vida:** acá las dos pagan. La memoria se vuelve referencia compartida entre personas y entre features; las especificaciones son el rastro que un equipo necesita para entender por qué se hizo algo.
+- **Con requisitos de auditoría:** las especificaciones y la memoria valen sin importar el tamaño —son justo lo que un auditor pide—.
+
+La regla práctica: cuanto más chico y efímero el proyecto, más conviene el harness mínimo. Las capas pesadas se justifican cuando hay continuidad —entre sesiones, entre personas, entre features— o cuando alguien, más tarde, va a preguntar "por qué se hizo así".
 
 ## El cierre
 
