@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 700" font-family="'Helvetica Neue', Arial, sans-serif">
+  <!-- background -->
+  <rect width="880" height="700" fill="#f6f5f2"/>
+
+  <!-- arrow markers -->
+  <defs>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#6b6b66"/>
+    </marker>
+    <marker id="arrA" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#b5523a"/>
+    </marker>
+  </defs>
+
+  <!-- header -->
+  <text x="40" y="48" fill="#8a857d" font-size="11" font-family="ui-monospace, Menlo, monospace" letter-spacing="3">PETDESK  ·  ORQUESTACION DE AGENTES</text>
+  <text x="40" y="88" fill="#1c1917" font-size="32" font-family="Georgia, 'Times New Roman', serif">Arquitectura del stack</text>
+  <text x="40" y="112" fill="#57534e" font-size="13">Qué se actualizó en las versiones 4 y 5, y qué se mantuvo desde la versión 2.</text>
+
+  <!-- ===================== LAYER STACK ===================== -->
+  <!-- Layer 1: Arquitecto -->
+  <rect x="40" y="140" width="800" height="56" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <rect x="56" y="160" width="84" height="16" rx="3" fill="none" stroke="#8a857d" stroke-width="0.8"/>
+  <text x="98" y="171" fill="#6b6b66" font-size="8" font-family="ui-monospace, Menlo, monospace" text-anchor="middle" letter-spacing="1">PERSONA</text>
+  <text x="156" y="166" fill="#1c1917" font-size="14" font-weight="600">Arquitecto</text>
+  <text x="156" y="184" fill="#57534e" font-size="11">Define contratos y reglas del proyecto antes de delegar.</text>
+  <text x="824" y="174" fill="#8a857d" font-size="10" font-family="ui-monospace, Menlo, monospace" text-anchor="end">CONSTITUTION.md</text>
+
+  <!-- Layer 2: Repositorio -->
+  <rect x="40" y="204" width="800" height="56" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <rect x="56" y="224" width="84" height="16" rx="3" fill="none" stroke="#8a857d" stroke-width="0.8"/>
+  <text x="98" y="235" fill="#6b6b66" font-size="8" font-family="ui-monospace, Menlo, monospace" text-anchor="middle" letter-spacing="1">REPO</text>
+  <text x="156" y="230" fill="#1c1917" font-size="14" font-weight="600">Repositorio</text>
+  <text x="156" y="248" fill="#57534e" font-size="11">Plan, contratos ejecutables y pruebas automáticas que validan cada cambio.</text>
+  <text x="824" y="238" fill="#8a857d" font-size="10" font-family="ui-monospace, Menlo, monospace" text-anchor="end">GitHub · CI</text>
+
+  <!-- Layer 3: Multica -->
+  <rect x="40" y="268" width="800" height="56" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <rect x="56" y="288" width="84" height="16" rx="3" fill="none" stroke="#8a857d" stroke-width="0.8"/>
+  <text x="98" y="299" fill="#6b6b66" font-size="8" font-family="ui-monospace, Menlo, monospace" text-anchor="middle" letter-spacing="1">TABLERO</text>
+  <text x="156" y="294" fill="#1c1917" font-size="14" font-weight="600">Multica</text>
+  <text x="156" y="312" fill="#57534e" font-size="11">Tablero de tareas; asigna cada tarea a un agente.</text>
+  <text x="824" y="302" fill="#8a857d" font-size="10" font-family="ui-monospace, Menlo, monospace" text-anchor="end">v0.3.17</text>
+
+  <!-- Layer 4: opencode -->
+  <rect x="40" y="332" width="800" height="56" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <rect x="56" y="352" width="84" height="16" rx="3" fill="none" stroke="#8a857d" stroke-width="0.8"/>
+  <text x="98" y="363" fill="#6b6b66" font-size="8" font-family="ui-monospace, Menlo, monospace" text-anchor="middle" letter-spacing="1">RUNNER</text>
+  <text x="156" y="358" fill="#1c1917" font-size="14" font-weight="600">opencode</text>
+  <text x="156" y="376" fill="#57534e" font-size="11">Ejecutor que el tablero lanza una vez por cada tarea.</text>
+  <text x="824" y="366" fill="#8a857d" font-size="10" font-family="ui-monospace, Menlo, monospace" text-anchor="end">v1.16.2</text>
+
+  <!-- Layer 5: Overlay (FOCAL / accent) -->
+  <rect x="40" y="396" width="800" height="56" rx="6" fill="#f3e7e2" stroke="#b5523a" stroke-width="1.2"/>
+  <rect x="56" y="416" width="84" height="16" rx="3" fill="none" stroke="#b5523a" stroke-width="0.9"/>
+  <text x="98" y="427" fill="#b5523a" font-size="8" font-family="ui-monospace, Menlo, monospace" text-anchor="middle" letter-spacing="1">CAPA</text>
+  <text x="156" y="422" fill="#1c1917" font-size="14" font-weight="600">gentle-ai</text>
+  <text x="156" y="440" fill="#6b4a40" font-size="11">Coordinación, sub-agentes y memoria (Engram). En estas tareas solo se usó la memoria.</text>
+  <text x="824" y="430" fill="#b5523a" font-size="10" font-family="ui-monospace, Menlo, monospace" text-anchor="end">overlay (fijo)</text>
+
+  <!-- Layer 6: Modelos -->
+  <rect x="40" y="460" width="800" height="56" rx="6" fill="#f0efec" stroke="#a8a39a" stroke-width="1"/>
+  <rect x="56" y="480" width="84" height="16" rx="3" fill="none" stroke="#a8a39a" stroke-width="0.8"/>
+  <text x="98" y="491" fill="#6b6b66" font-size="8" font-family="ui-monospace, Menlo, monospace" text-anchor="middle" letter-spacing="1">MODELOS</text>
+  <text x="156" y="486" fill="#1c1917" font-size="14" font-weight="600">Modelos vía OpenRouter</text>
+  <text x="156" y="504" fill="#57534e" font-size="11">Cada agente elige su modelo; el tablero no interviene.</text>
+  <text x="824" y="494" fill="#8a857d" font-size="10" font-family="ui-monospace, Menlo, monospace" text-anchor="end">Kimi K2.6 · DeepSeek V3.2</text>
+
+  <!-- ===================== AUTONOMY FLOW ===================== -->
+  <text x="40" y="560" fill="#8a857d" font-size="11" font-family="ui-monospace, Menlo, monospace" letter-spacing="3">FLUJO POR TAREA</text>
+
+  <!-- arrows first (behind boxes) -->
+  <line x1="180" y1="600" x2="208" y2="600" stroke="#6b6b66" stroke-width="1" marker-end="url(#arr)"/>
+  <line x1="348" y1="600" x2="376" y2="600" stroke="#6b6b66" stroke-width="1" marker-end="url(#arr)"/>
+  <line x1="516" y1="600" x2="544" y2="600" stroke="#6b6b66" stroke-width="1" marker-end="url(#arr)"/>
+  <line x1="684" y1="600" x2="712" y2="600" stroke="#b5523a" stroke-width="1.2" marker-end="url(#arrA)"/>
+
+  <!-- step 1 -->
+  <rect x="40" y="578" width="140" height="44" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <text x="110" y="604" fill="#1c1917" font-size="12" font-weight="600" text-anchor="middle">Tarea asignada</text>
+  <!-- step 2 -->
+  <rect x="208" y="578" width="140" height="44" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <text x="278" y="604" fill="#1c1917" font-size="12" font-weight="600" text-anchor="middle">Agente trabaja</text>
+  <!-- step 3 -->
+  <rect x="376" y="578" width="140" height="44" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <text x="446" y="600" fill="#1c1917" font-size="12" font-weight="600" text-anchor="middle">Propone cambio</text>
+  <text x="446" y="614" fill="#8a857d" font-size="9" font-family="ui-monospace, Menlo, monospace" text-anchor="middle">pull request</text>
+  <!-- step 4 -->
+  <rect x="544" y="578" width="140" height="44" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <text x="614" y="600" fill="#1c1917" font-size="12" font-weight="600" text-anchor="middle">Pruebas</text>
+  <text x="614" y="614" fill="#8a857d" font-size="9" font-family="ui-monospace, Menlo, monospace" text-anchor="middle">automáticas (CI)</text>
+  <!-- step 5 (accent) -->
+  <rect x="712" y="578" width="128" height="44" rx="6" fill="#f3e7e2" stroke="#b5523a" stroke-width="1.2"/>
+  <text x="776" y="600" fill="#1c1917" font-size="12" font-weight="600" text-anchor="middle">Integración</text>
+  <text x="776" y="614" fill="#b5523a" font-size="9" font-family="ui-monospace, Menlo, monospace" text-anchor="middle">automática</text>
+
+  <!-- aside note -->
+  <text x="40" y="648" fill="#57534e" font-size="12" font-family="Georgia, serif" font-style="italic">La asignación de la siguiente tarea todavía requiere intervención manual.</text>
+
+  <!-- ===================== LEGEND ===================== -->
+  <line x1="40" y1="668" x2="840" y2="668" stroke="rgba(28,25,23,0.12)" stroke-width="0.8"/>
+  <rect x="40" y="680" width="12" height="12" rx="2" fill="#f3e7e2" stroke="#b5523a" stroke-width="1"/>
+  <text x="60" y="690" fill="#57534e" font-size="10" font-family="ui-monospace, Menlo, monospace">Capa diferenciadora / paso autónomo</text>
+  <rect x="360" y="680" width="12" height="12" rx="2" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <text x="380" y="690" fill="#57534e" font-size="10" font-family="ui-monospace, Menlo, monospace">Componente estándar</text>
+</svg>

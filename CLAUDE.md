@@ -19,14 +19,19 @@ Notes are written in **Spanish**; match that language when adding to `research/`
 - `docs/COMO-LO-HICIMOS.md` — retrospectiva completa del showcase PetDesk v1: arquitectura, flujo, errores, receta, costos reales, playbook paso a paso, análisis 🤖/👤 de lo autónomo vs manual.
 - `docs/QUE-APRENDIMOS-V2.md` — plan v2 (las 8 mejoras + apuesta) y evaluación de frameworks SDD (OpenSpec, GitHub Spec-Kit). Decisión: adoptar 4 patrones sin instalar ninguno. Incluye **Anexo A** con resultados reales del v2 ejecutado.
 
-**Docs — Artículos para publicar (v2 trilogy)**:
+**Docs — Baselines de entorno** (mediciones reproducibles):
+- `docs/env-baseline-v3.md` — snapshot del entorno congelado del v3 + smoke test de compatibilidad del upgrade de opencode. Registro histórico.
+- `docs/env-baseline-v4.md` — baseline del v4/v5: comparación contra v2 con costo real de OpenRouter, autonomía y la varianza de costo ~4×.
 
-Cada versión tiene su paquete completo: Medium + LinkedIn post + hero image + carousel.
+**Docs — Artículos para publicar**:
+
+Cada versión tiene su paquete (Medium + LinkedIn; v2/v3 con hero + carousel, v4/v5 con diagrama de arquitectura SVG).
 
 | Versión | Tema central | Archivos |
 |---|---|---|
 | **v2** (Multica + multiagente) | 12 errores del v1 + 4 patrones que arreglaron todo | `MEDIUM-ARTICLE.md` · `MEDIUM-IMPORT.md` · `LINKEDIN-POST.md` · `hero-v1-vs-v2.png` · `linkedin-carousel.pdf` |
-| **v3** (+ gentle-ai overlay) | Lo que cuesta agregar SDD al stack: +60% costo per-issue, +92% tiempo, pero 3 memorias estructuradas | `MEDIUM-ARTICLE-V3.md` · `LINKEDIN-POST-V3.md` · `hero-v2-vs-v3.png` · `linkedin-carousel-v3.pdf` |
+| **v3** (+ gentle-ai overlay) — *no publicado, descartado como comparación* | Lo que cuesta agregar SDD al stack: +60% costo per-issue, +92% tiempo, pero 3 memorias estructuradas | `MEDIUM-ARTICLE-V3.md` · `LINKEDIN-POST-V3.md` · `hero-v2-vs-v3.png` · `linkedin-carousel-v3.pdf` |
+| **v4/v5** (autonomía: stack actualizado vs v2) | Dos preguntas — ¿más barato? (no: costo no-determinístico, varianza ~4×). ¿más autónomo? (sí: auto-merge gateado por CI, 0 merges humanos). Nombra gentle-ai/Engram con el matiz | `MEDIUM-ARTICLE-V4.md` · `LINKEDIN-POST-V4.md` · `architecture-v4.svg` |
 
 Las versiones `.html` son las fuentes editables (hero + carousel). Los `.pdf` y `.png` son los outputs renderizados con Chrome `--print-to-pdf` / `--screenshot`.
 
@@ -34,6 +39,8 @@ Las versiones `.html` son las fuentes editables (hero + carousel). Los `.pdf` y 
 - `scripts/setup-petdesk-multica.sh` — v1 original, crea agentes + issues en Multica.
 - `scripts/setup-petdesk-v2-multica.sh` — v2, con cost routing (DeepSeek para Frontend) + referencias a `tests/contracts/` y `CONSTITUTION.md`.
 - `scripts/setup-petdesk-v3-stats.sh` — v3, agrega feature Stats Dashboard sobre petdesk-v2 para medir gentle-ai overlay.
+- `scripts/setup-petdesk-v4-stats.sh` — v4, re-run del Stats Dashboard contra la rama `v4-baseline` con el entorno actualizado (Multica 0.3.17 + opencode 1.16.2).
+- `scripts/setup-petdesk-v5-stats.sh` — v5, autonomía (Camino A): el agente habilita auto-merge; la integración la gatea el CI. Base `v5-baseline`.
 
 Todos son **idempotentes** y reusables: copiar, cambiar nombres + issue bodies, listo.
 
