@@ -76,6 +76,14 @@ La regla práctica: cuanto más chico y efímero el proyecto, más conviene el h
 
 La pregunta útil no es "¿cuál versión es mejor?", sino "¿qué capa de harness necesito para este trabajo?". v2 era un harness parcial, predecible y barato. v6 es completo, más capaz y más variable. Entre las dos, la lección no es elegir una, sino entender que cada capa tiene un costo y un escenario donde paga. La mayoría de las veces, las dos capas que más rinden son las más simples de agregar.
 
+## Próximo paso: modelos locales
+
+Todo el análisis de costo de este texto asume modelos de pago, facturados por token a través de un gateway. Eso arrastra tres cosas que vimos de cerca: el costo variable, los límites de la key que llegaron a bloquear una corrida, y los cortes transitorios del proveedor. El próximo paso es sacarlos de la ecuación: correr modelos locales.
+
+Con un modelo local autohospedado, el costo por token desaparece y se vuelve un costo fijo de infraestructura; los límites de cuota y los timeouts del proveedor también se van. El trade-off es conocido: hoy los modelos locales que corren en hardware accesible son más débiles y más lentos que Kimi o DeepSeek, y hace falta una máquina que los sostenga. Pero para buena parte del trabajo —sobre todo las capas baratas que ya demostraron rendir, y las tareas mecánicas— la pregunta deja de ser "cuánto sale cada feature" y pasa a ser "qué corre bien sin pagar por token".
+
+Ese es el experimento que sigue: el mismo harness, los mismos contratos, pero con el modelo movido de la nube a la máquina. Si el harness es donde está casi todo el sistema —y los datos de este texto apuntan a eso—, el modelo debería poder cambiarse por uno local sin rehacer el resto.
+
 ---
 
 **Repositorios y referencia:**
