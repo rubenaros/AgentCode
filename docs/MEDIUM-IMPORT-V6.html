@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>v2 vs v6 — harness</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">v2 vs v6 — harness</h1>
+</header>
+<h1
+id="de-7-a-13-capas-qué-cambia-al-completar-el-harness-de-un-equipo-de-agentes">De
+7 a 13 capas: qué cambia al completar el harness de un equipo de
+agentes</h1>
+<p><em>Construí el mismo producto con dos versiones del mismo sistema:
+una con un harness parcial (v2) y otra con el harness completo (v6, con
+memoria persistente, planificación por máquina y entrega autónoma). No
+comparo costos absolutos —cada versión construyó una feature distinta—.
+Comparo el costo por feature, los retrabajos, el tiempo y, sobre todo,
+lo que cada harness entrega.</em></p>
+<figure>
+<img src="architecture-v2-vs-v6.png"
+alt="v2 vs v6: qué capas del harness tenía cada versión" />
+<figcaption aria-hidden="true">v2 vs v6: qué capas del harness tenía
+cada versión</figcaption>
+</figure>
+<hr />
+<p>Un “harness” es toda la infraestructura que rodea al modelo para
+convertirlo en agente. La literatura lo descompone en unas trece capas,
+del modelo y el loop de control a la memoria, la planificación, la
+verificación y la entrega. El principio que se repite: el modelo razona,
+el harness actúa. En un análisis de Claude Code, el 1,6% del código es
+lógica del modelo y el 98,4% es harness.</p>
+<p>Tenía dos versiones del mismo sistema de agentes sobre un tablero
+Kanban. Las dos usan los mismos modelos baratos vía OpenRouter. La
+diferencia está en cuántas capas de harness tiene cada una.</p>
+<h2 id="el-harness-de-cada-versión">El harness de cada versión</h2>
+<p><strong>v2</strong> era un harness parcial. Cubría unas siete capas:
+el tablero (Multica) aportaba el workspace aislado, la cola, el despacho
+y el ciclo de vida; el ejecutor (opencode) aportaba el loop, las
+herramientas y el contexto de trabajo; y el arquitecto —una persona—
+aportaba los contratos y las reglas del proyecto. La descomposición de
+tareas la hacía el arquitecto a mano. La verificación eran contratos
+ejecutables más una revisión manual. El merge lo hacía una persona.</p>
+<p><strong>v6</strong> completa las capas que faltaban:</p>
+<ul>
+<li><strong>Memoria persistente:</strong> v2 no tenía ninguna; v6 la
+suma con Engram (episódica y semántica).</li>
+<li><strong>Planificación / descomposición:</strong> en v2 la hacía el
+arquitecto a mano; en v6 la hace la máquina (flujo guiado por
+especificación).</li>
+<li><strong>Multi-agente:</strong> v2 tenía solo el tablero; v6 suma
+sub-agentes del overlay.</li>
+<li><strong>Verificación:</strong> v2 usaba contratos más revisión
+manual; v6 usa el CI como compuerta automática.</li>
+<li><strong>Entrega:</strong> v2 hacía el merge a mano; v6 lo integra
+solo (auto-merge gateado por CI).</li>
+</ul>
+<p>En números: v2 tenía alrededor de 7 capas; v6 tiene las 13. Lo que v6
+sumó es memoria, planificación por máquina, sub-agentes, verificación
+automática y entrega autónoma.</p>
+<h2 id="los-números-lo-que-sí-comparé">Los números (lo que sí
+comparé)</h2>
+<p>Las dos versiones construyeron features distintas: v2 levantó el MVP
+completo; v6 agregó una feature de estadísticas. Por eso el costo
+absoluto no dice nada, y comparo por unidad. Aviso de método: tomo el
+costo de la factura de OpenRouter, no del número que reporta el ejecutor
+—ese subcuenta de forma inconsistente, entre 1,1 y 1,6 veces por debajo
+según la medición—.</p>
+<p>Los números, lado a lado (v2 → v6):</p>
+<ul>
+<li><strong>Costo real (OpenRouter):</strong> $1.80 por 4 tareas →
+~$3.20 por 3 corridas.</li>
+<li><strong>Costo por unidad:</strong> ~$0.45 por tarea → ~$1.07 por
+feature (rango $0.60–$1.50).</li>
+<li><strong>Tiempo por unidad:</strong> ~12 min por tarea → ~11 min por
+feature (~10–12 min por corrida).</li>
+<li><strong>Tests al cierre:</strong> 31 → 39.</li>
+<li><strong>Varianza de costo:</strong> baja y predecible → ~1,8× entre
+corridas idénticas.</li>
+</ul>
+<p>Una salvedad sobre las unidades: la “tarea” de v2 es un issue
+acotado; la “corrida” de v6 entrega la feature entera con su flujo de
+especificación. No son del mismo tamaño, así que la comparación por
+unidad es orientativa, no exacta. El tiempo, en cambio, jugó a favor de
+v6: entregar la feature en una sola corrida con especificación salió más
+rápido que partirla en varias tareas, porque evita recargar el contexto
+del repositorio en cada una.</p>
+<p><strong>Retrabajos.</strong> Acá aparece el matiz más útil. En las
+dos versiones, el código de los agentes salió limpio: pasó los tests,
+respetó el alcance, sin violaciones. La diferencia no estuvo en el
+código, sino en la operación. v2 fue tranquila: cuatro PRs limpios al
+primer intento, y las únicas intervenciones humanas fueron los merges.
+v6 tuvo más fricción operativa: un corte transitorio del proveedor que
+obligó a relanzar una corrida, y un detalle de configuración mío
+—resetear la rama base borró el commit que activaba el CI— que dejó un
+PR sin integrar. El harness más completo tiene más piezas, y más piezas
+significan más puntos de falla.</p>
+<h2 id="lo-que-el-harness-completo-entrega-de-más">Lo que el harness
+completo entrega de más</h2>
+<p>Más allá del costo, v6 deja cosas que v2 no producía:</p>
+<ul>
+<li><strong>Memoria que sobrevive.</strong> Cada agente dejó registros
+estructurados de qué hizo y por qué. v2 perdía toda decisión al terminar
+la tarea.</li>
+<li><strong>Plan y especificación como artefacto.</strong> v6 dejó
+documentos de exploración, propuesta, especificación, diseño y tareas en
+el repositorio. v2 no dejaba rastro del razonamiento detrás del
+código.</li>
+<li><strong>Entrega autónoma.</strong> En v6, las tareas se integraron
+solas con el CI como única compuerta: cero merges manuales. En v2 los
+hacía todos una persona.</li>
+</ul>
+<h2 id="mi-recomendación">Mi recomendación</h2>
+<p>Voy a ser directo, porque medí lo suficiente para tener una
+posición.</p>
+<p>De todo lo que v6 agregó, <strong>lo que claramente rinde son dos
+capas: la verificación con CI y la entrega autónoma.</strong> Eliminan
+las intervenciones manuales de merge, son baratas de montar, y —dato
+importante— las aporta GitHub, no el overlay de método. Esas dos capas
+las sumaría a cualquier setup, incluido un v2.</p>
+<p>Las capas pesadas del overlay —la memoria persistente y la
+planificación por especificación— son <strong>condicionales</strong>.
+Medí dos cosas incómodas: la memoria se escribió en cada tarea, pero no
+encontré evidencia de que se leyera después; y la planificación por
+máquina costó aproximadamente lo mismo que ir directo, pero con esa
+variación de 1,8 veces y una capa siempre activa que se paga corra o no.
+El valor de esas capas aparece en escenarios que no probé: un equipo de
+varias personas que comparte decisiones, features grandes con muchas
+alternativas de diseño, o requisitos de auditoría. Para un solo
+desarrollador y features acotadas, agregan costo y fragilidad sin un
+retorno que haya podido demostrar.</p>
+<p>Dicho de otro modo: <strong>el salto de v2 a “harness completo”
+mejora sobre todo por dos capas baratas; el resto del harness pesado
+conviene incorporarlo cuando el escenario lo justifique, no por
+defecto.</strong> Un harness más completo no es automáticamente mejor.
+Es más capaz y más caro de operar, y conviene sumar cada capa solo
+cuando se va a usar.</p>
+<h2 id="cuándo-valen-las-capas-que-no-usé">Cuándo valen las capas que no
+usé</h2>
+<p>Que la memoria y la planificación por especificación no rindieran acá
+no las descalifica: depende del tamaño y la vida del proyecto. Mi
+lectura, por escenario:</p>
+<ul>
+<li><strong>Proyecto muy chico, una sola feature, un desarrollador,
+descartable:</strong> no las uses. La memoria no tiene a quién servirle
+—no hay una segunda sesión que la lea— y la planificación por
+especificación agrega costo y variación sin un plan que valga la pena
+documentar. El stack mínimo (contratos + CI + auto-merge) alcanza y
+sobra; acá el overlay pesado es lastre.</li>
+<li><strong>Proyecto mediano, varias features, un
+desarrollador:</strong> la planificación por especificación empieza a
+pagar en las features con decisiones de diseño reales —varias
+alternativas, tradeoffs—; en las mecánicas sigue siendo overhead. La
+memoria todavía rinde poco si se trabaja solo.</li>
+<li><strong>Proyecto grande, equipo, larga vida:</strong> acá las dos
+pagan. La memoria se vuelve referencia compartida entre personas y entre
+features; las especificaciones son el rastro que un equipo necesita para
+entender por qué se hizo algo.</li>
+<li><strong>Con requisitos de auditoría:</strong> las especificaciones y
+la memoria valen sin importar el tamaño —son justo lo que un auditor
+pide—.</li>
+</ul>
+<p>La regla práctica: cuanto más chico y efímero el proyecto, más
+conviene el harness mínimo. Las capas pesadas se justifican cuando hay
+continuidad —entre sesiones, entre personas, entre features— o cuando
+alguien, más tarde, va a preguntar “por qué se hizo así”.</p>
+<h2 id="el-cierre">El cierre</h2>
+<p>La pregunta útil no es “¿cuál versión es mejor?”, sino “¿qué capa de
+harness necesito para este trabajo?”. v2 era un harness parcial,
+predecible y barato. v6 es completo, más capaz y más variable. Entre las
+dos, la lección no es elegir una, sino entender que cada capa tiene un
+costo y un escenario donde paga. La mayoría de las veces, las dos capas
+que más rinden son las más simples de agregar.</p>
+<h2 id="próximo-paso-modelos-locales">Próximo paso: modelos locales</h2>
+<p>Todo el análisis de costo de este texto asume modelos de pago,
+facturados por token a través de un gateway. Eso arrastra tres cosas que
+vimos de cerca: el costo variable, los límites de la key que llegaron a
+bloquear una corrida, y los cortes transitorios del proveedor. El
+próximo paso es sacarlos de la ecuación: correr modelos locales.</p>
+<p>Con un modelo local autohospedado, el costo por token desaparece y se
+vuelve un costo fijo de infraestructura; los límites de cuota y los
+timeouts del proveedor también se van. El trade-off es conocido: hoy los
+modelos locales que corren en hardware accesible son más débiles y más
+lentos que Kimi o DeepSeek, y hace falta una máquina que los sostenga.
+Pero para buena parte del trabajo —sobre todo las capas baratas que ya
+demostraron rendir, y las tareas mecánicas— la pregunta deja de ser
+“cuánto sale cada feature” y pasa a ser “qué corre bien sin pagar por
+token”.</p>
+<p>Ese es el experimento que sigue: el mismo harness, los mismos
+contratos, pero con el modelo movido de la nube a la máquina. Si el
+harness es donde está casi todo el sistema —y los datos de este texto
+apuntan a eso—, el modelo debería poder cambiarse por uno local sin
+rehacer el resto.</p>
+<hr />
+<p><strong>Repositorios y referencia:</strong> - AgentCode — scripts,
+documentación y la referencia de capas: github.com/rubenaros/AgentCode -
+petdesk-v2 — el repositorio del experimento (ramas por versión):
+github.com/rubenaros/petdesk-v2</p>
+</body>
+</html>
