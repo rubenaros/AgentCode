@@ -14,6 +14,7 @@ Notes are written in **Spanish**; match that language when adding to `research/`
 - `research/reporte-agentes-kanban-modelos.md` — reporte principal: orquestadores Kanban (Multica, Vibe Kanban…), costos modelos vs SWE-bench, Claude API-vs-subscription, arquitectura recomendada.
 - `research/multica-deep-dive.md` — deep dive técnico de Multica.
 - `research/proyecto-petdesk.md` — plan original del showcase PetDesk (arquitectura, contratos, 6 issues).
+- `research/capas-harness-stack-v6.md` — referencia: las 13 capas de harness (literatura) mapeadas al stack + versiones de cada componente al v6.
 
 **Docs — Retrospectivas y planning**:
 - `docs/COMO-LO-HICIMOS.md` — retrospectiva completa del showcase PetDesk v1: arquitectura, flujo, errores, receta, costos reales, playbook paso a paso, análisis 🤖/👤 de lo autónomo vs manual.
@@ -41,6 +42,7 @@ Las versiones `.html` son las fuentes editables (hero + carousel). Los `.pdf` y 
 - `scripts/setup-petdesk-v3-stats.sh` — v3, agrega feature Stats Dashboard sobre petdesk-v2 para medir gentle-ai overlay.
 - `scripts/setup-petdesk-v4-stats.sh` — v4, re-run del Stats Dashboard contra la rama `v4-baseline` con el entorno actualizado (Multica 0.3.17 + opencode 1.16.2).
 - `scripts/setup-petdesk-v5-stats.sh` — v5, autonomía (Camino A): el agente habilita auto-merge; la integración la gatea el CI. Base `v5-baseline`.
+- `scripts/setup-petdesk-v6-sdd.sh` — v6, SDD invocado explícitamente (un issue feature-level, preflight bakeado, artefactos en `openspec/`). Base `v6-baseline`.
 
 Todos son **idempotentes** y reusables: copiar, cambiar nombres + issue bodies, listo.
 

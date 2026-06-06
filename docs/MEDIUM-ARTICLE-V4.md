@@ -90,6 +90,19 @@ La lección práctica es simple: para presupuestar, sirve la factura del proveed
 
 (Costos en dólares, según la factura del proveedor.)
 
+## Sobre los frameworks que prometen el ciclo completo
+
+Hay una categoría de herramientas en alza que promete justamente esto: de una especificación corta a código de producción —con requisitos, arquitectura, pruebas, auditoría de seguridad y despliegue— a cargo de decenas de agentes coordinados. La arquitectura que proponen es sólida y, en el fondo, es la misma que usé en este experimento: un orquestador, agentes especializados, fases con compuertas, revisión en paralelo y memoria entre sesiones, casi siempre definida en archivos de texto.
+
+El punto no es la arquitectura. Es que la mayoría de esas presentaciones muestran lo que el sistema puede hacer, sin un solo número de costo, tiempo o repetibilidad. Y ahí es donde lo que medí marca la diferencia:
+
+- La maquinaria pesada no siempre se usa. En tareas de tamaño normal, las fases de planificación y el catálogo de habilidades no llegaron a activarse. Se paga por tenerlas, no por usarlas.
+- El costo no es estable. El mismo pedido resultó hasta cuatro veces más caro entre una corrida y otra.
+- La memoria se guarda, pero su beneficio no está asegurado: dejar registros no es lo mismo que consultarlos.
+- La autonomía completa tiene costuras. La integración se puede automatizar; el encadenamiento de tareas, todavía no.
+
+Nada de esto descalifica a esas herramientas. La arquitectura funciona, y el valor aparece en los escenarios adecuados: equipos, funciones grandes, requisitos de auditoría. Pero el único modo de saber si rinden para un proyecto es medirlas sobre ese proyecto, en lugar de confiar en la demostración. Esto no es una teoría sobre un framework nuevo: es la medición de un enfoque que muchos ya están ofreciendo.
+
 ## Qué me llevo
 
 Dos preguntas, dos respuestas de distinto signo.
