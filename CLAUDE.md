@@ -34,7 +34,7 @@ Cada versión tiene su paquete (Medium + LinkedIn; v2/v3 con hero + carousel, v4
 | **v3** (+ gentle-ai overlay) — *no publicado, descartado como comparación* | Lo que cuesta agregar SDD al stack: +60% costo per-issue, +92% tiempo, pero 3 memorias estructuradas | `MEDIUM-ARTICLE-V3.md` · `LINKEDIN-POST-V3.md` · `hero-v2-vs-v3.png` · `linkedin-carousel-v3.pdf` |
 | **v4/v5** (autonomía: stack actualizado vs v2) | Dos preguntas — ¿más barato? (no: costo no-determinístico, varianza ~4×). ¿más autónomo? (sí: auto-merge gateado por CI, 0 merges humanos). Nombra gentle-ai/Engram con el matiz | `MEDIUM-ARTICLE-V4.md` · `LINKEDIN-POST-V4.md` · `architecture-v4.svg` |
 | **harness** (síntesis transversal) | Un tablero de agentes = 5 de 13 capas de un harness; las 8 que faltan, con qué se llenan (open source, con alternativas) y cuáles rindieron | `MEDIUM-ARTICLE-HARNESS.md` · `LINKEDIN-POST-HARNESS.md` · `architecture-harness-grid.svg` |
-| **v6** (v2 vs v6: completar el harness) | SDD invocado de verdad; comparación v2↔v6 por harness (7→13 capas), costo/feature, retrabajos y tiempo. Opinión: CI + auto-merge rinden; memoria y SDD son condicionales | `MEDIUM-ARTICLE-V6.md` · `LINKEDIN-POST-V6.md` · `architecture-v2-vs-v6.svg` |
+| **v6** (v2 vs v6: completar el arnés) | SDD invocado de verdad; comparación v2↔v6 por arnés (7→13 capas), costo/feature, retrabajos y tiempo. Opinión: CI + auto-merge rinden; memoria y SDD son condicionales | `MEDIUM-ARTICLE-V6.md` · `MEDIUM-IMPORT-V6.md` · `LINKEDIN-POST-V6.md` · `architecture-v2-vs-v6.svg/.png` · `linkedin-carousel-v6.html/.pdf` |
 
 Las versiones `.html` son las fuentes editables (hero + carousel). Los `.pdf` y `.png` son los outputs renderizados con Chrome `--print-to-pdf` / `--screenshot`.
 

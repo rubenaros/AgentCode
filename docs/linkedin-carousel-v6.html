@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>LinkedIn Carousel v6 — v2 vs v6, el arnés</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper:#faf7f2; --paper-2:#f1ede5; --ink:#1c1917; --muted:#57534e;
+    --soft:#a8a29e; --rule:rgba(28,25,23,0.12); --accent:#b5523a; --accent-tint:rgba(181,82,58,0.08);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body { background:var(--paper); }
+  body { font-family:'Geist',sans-serif; color:var(--ink); -webkit-font-smoothing:antialiased; }
+  @page { size:1080px 1350px; margin:0; }
+  @media print { .slide { page-break-after:always; } }
+  .slide { width:1080px; height:1350px; padding:90px 88px 76px; background:var(--paper); position:relative; overflow:hidden; page-break-after:always; }
+  .slide:last-child { page-break-after:auto; }
+  .eyebrow { font-family:'Geist Mono',monospace; font-size:15px; font-weight:500; letter-spacing:0.20em; text-transform:uppercase; color:var(--muted); }
+  h1 { font-family:'Instrument Serif',serif; font-weight:400; line-height:1.08; color:var(--ink); letter-spacing:-0.01em; }
+  .lead { font-size:33px; line-height:1.42; color:var(--muted); margin-top:40px; }
+  .lead b { color:var(--ink); font-weight:600; }
+  .footer-mark { position:absolute; bottom:52px; left:88px; right:88px; display:flex; justify-content:space-between; align-items:center; font-family:'Geist Mono',monospace; font-size:14px; color:var(--soft); letter-spacing:0.14em; text-transform:uppercase; border-top:1px solid var(--rule); padding-top:22px; }
+  .footer-mark .swipe { color:var(--accent); font-weight:500; }
+  .footer-mark .brand { color:var(--ink); }
+  /* cover */
+  .s1 h1 { font-size:104px; margin-top:60px; }
+  .s1 .sub { font-family:'Instrument Serif',serif; font-style:italic; font-size:38px; color:var(--muted); line-height:1.3; margin-top:44px; }
+  .s1 .chips { margin-top:80px; display:flex; gap:20px; }
+  .s1 .chip { font-family:'Geist Mono',monospace; font-size:20px; padding:16px 24px; border:1px solid var(--rule); border-radius:8px; color:var(--ink); }
+  .s1 .chip .hl { color:var(--accent); font-weight:600; }
+  /* headings on content slides */
+  .ch h1 { font-size:62px; margin-top:30px; }
+  .big { font-family:'Instrument Serif',serif; font-size:60px; line-height:1.15; color:var(--ink); margin-top:56px; }
+  .big .hl { color:var(--accent); }
+  /* layer / bullet list */
+  ul.layers { list-style:none; margin-top:52px; }
+  ul.layers li { font-size:34px; line-height:1.35; padding:22px 0; border-bottom:1px solid var(--rule); display:flex; gap:22px; align-items:baseline; }
+  ul.layers li::before { content:"→"; color:var(--accent); font-family:'Geist Mono',monospace; font-size:28px; }
+  ul.layers li b { font-weight:600; }
+  ul.layers li span { color:var(--muted); }
+  /* number rows */
+  .rows { margin-top:52px; }
+  .rows .r { display:flex; justify-content:space-between; align-items:baseline; padding:26px 0; border-bottom:1px solid var(--rule); }
+  .rows .r .k { font-size:30px; color:var(--muted); }
+  .rows .r .v { font-family:'Geist Mono',monospace; font-size:30px; color:var(--ink); }
+  .rows .r .v .a { color:var(--accent); }
+  .note { font-size:24px; color:var(--soft); margin-top:36px; font-style:italic; font-family:'Instrument Serif',serif; }
+  /* simple bullets */
+  ul.b { list-style:none; margin-top:48px; }
+  ul.b li { font-size:33px; line-height:1.4; padding:24px 0; border-bottom:1px solid var(--rule); }
+  ul.b li b { font-weight:600; }
+  ul.b li span { color:var(--muted); }
+</style>
+</head>
+<body>
+
+<!-- 1 COVER -->
+<div class="slide s1">
+  <p class="eyebrow">Multica · de v2 a v6</p>
+  <h1>De 7<br>a 13 capas</h1>
+  <p class="sub">Qué cambia al completar el arnés de un equipo de agentes.</p>
+  <div class="chips">
+    <div class="chip">v2: <span class="hl">7 capas</span></div>
+    <div class="chip">v6: <span class="hl">13 capas</span></div>
+  </div>
+  <div class="footer-mark"><span class="swipe">Deslizar →</span><span class="brand">@rubenaros</span></div>
+</div>
+
+<!-- 2 CONCEPTO -->
+<div class="slide ch">
+  <p class="eyebrow">Concepto</p>
+  <h1>El modelo razona,<br>el arnés actúa</h1>
+  <p class="lead">El <b>arnés</b> es toda la infraestructura que rodea al modelo: el loop, las herramientas, la memoria, la planificación, la verificación y la entrega.</p>
+  <p class="big">En Claude Code, <span class="hl">1,6%</span> es lógica del modelo.<br><span class="hl">98,4%</span> es arnés.</p>
+  <div class="footer-mark"><span class="swipe">Deslizar →</span><span class="brand">@rubenaros</span></div>
+</div>
+
+<!-- 3 v2 -->
+<div class="slide ch">
+  <p class="eyebrow">Punto de partida</p>
+  <h1>v2 — un arnés parcial</h1>
+  <p class="lead">Unas <b>7 de 13 capas</b>. El tablero y el ejecutor; los contratos a mano.</p>
+  <p class="big">Descomposición a mano.<br>Verificación manual.<br>Merge <span class="hl">manual</span>.</p>
+  <div class="footer-mark"><span class="swipe">Deslizar →</span><span class="brand">@rubenaros</span></div>
+</div>
+
+<!-- 4 v6 added -->
+<div class="slide ch">
+  <p class="eyebrow">Lo que faltaba</p>
+  <h1>v6 completa las capas que faltaban</h1>
+  <ul class="layers">
+    <li><b>Memoria persistente</b> <span>— Engram</span></li>
+    <li><b>Planificación por máquina</b> <span>— guiada por especificación</span></li>
+    <li><b>Sub-agentes</b></li>
+    <li><b>Verificación</b> <span>— CI como compuerta</span></li>
+    <li><b>Entrega autónoma</b> <span>— auto-merge</span></li>
+  </ul>
+  <div class="footer-mark"><span class="swipe">Deslizar →</span><span class="brand">@rubenaros</span></div>
+</div>
+
+<!-- 5 números -->
+<div class="slide ch">
+  <p class="eyebrow">Lo que medí</p>
+  <h1>Los números (v2 → v6)</h1>
+  <div class="rows">
+    <div class="r"><span class="k">Costo por unidad</span><span class="v">$0.45 → <span class="a">$1.07</span></span></div>
+    <div class="r"><span class="k">Tiempo por unidad</span><span class="v">~12 min → ~11 min</span></div>
+    <div class="r"><span class="k">Tests al cierre</span><span class="v">31 → 39</span></div>
+    <div class="r"><span class="k">Varianza de costo</span><span class="v">predecible → <span class="a">1,8×</span></span></div>
+  </div>
+  <p class="note">Costo facturado en OpenRouter. Features distintas: comparación por unidad, orientativa.</p>
+  <div class="footer-mark"><span class="swipe">Deslizar →</span><span class="brand">@rubenaros</span></div>
+</div>
+
+<!-- 6 opinión -->
+<div class="slide ch">
+  <p class="eyebrow">Mi opinión</p>
+  <h1>Dos capas rinden.<br>El resto, depende.</h1>
+  <p class="lead">Se justifican: <b>verificación con CI</b> y <b>entrega autónoma</b>. Baratas, y las aporta GitHub.</p>
+  <p class="lead">Condicionales: la <b>memoria</b> (se escribió, no vi que se leyera) y la <b>planificación</b> (mismo costo, más varianza).</p>
+  <div class="footer-mark"><span class="swipe">Deslizar →</span><span class="brand">@rubenaros</span></div>
+</div>
+
+<!-- 7 cuándo valen -->
+<div class="slide ch">
+  <p class="eyebrow">Cuándo valen</p>
+  <h1>Las capas pesadas, según el proyecto</h1>
+  <ul class="b">
+    <li><b>Proyecto chico / descartable:</b> <span>no las uses. Son lastre.</span></li>
+    <li><b>Equipo / features grandes / larga vida:</b> <span>pagan.</span></li>
+    <li><b>Con auditoría:</b> <span>valen sin importar el tamaño.</span></li>
+  </ul>
+  <div class="footer-mark"><span class="swipe">Deslizar →</span><span class="brand">@rubenaros</span></div>
+</div>
+
+<!-- 8 close -->
+<div class="slide ch">
+  <p class="eyebrow">En una frase</p>
+  <h1>Un arnés más completo no es automáticamente mejor</h1>
+  <p class="lead">Es más capaz y más caro de operar. Conviene sumar cada capa cuando el escenario la justifique, no por defecto.</p>
+  <p class="big">Próximo paso:<br><span class="hl">modelos locales</span>.</p>
+  <div class="footer-mark"><span class="swipe">github.com/rubenaros/AgentCode</span><span class="brand">@rubenaros</span></div>
+</div>
+
+</body>
+</html>
