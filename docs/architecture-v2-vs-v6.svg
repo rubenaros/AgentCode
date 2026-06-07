@@ -2,7 +2,7 @@
   <rect width="960" height="760" fill="#f6f5f2"/>
 
   <!-- header -->
-  <text x="40" y="48" fill="#8a857d" font-size="11" font-family="ui-monospace, Menlo, monospace" letter-spacing="3">HARNESS DE AGENTE · v2 vs v6</text>
+  <text x="40" y="48" fill="#8a857d" font-size="11" font-family="ui-monospace, Menlo, monospace" letter-spacing="3">ARNÉS DE AGENTE · v2 vs v6</text>
   <text x="40" y="88" fill="#1c1917" font-size="30" font-family="Georgia, 'Times New Roman', serif">Qué capas tenía cada versión</text>
   <text x="40" y="112" fill="#57534e" font-size="13">v2 cubría ~7 de 13 capas. v6 completa el resto (filas resaltadas). Mismos modelos en ambas.</text>
 

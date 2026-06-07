@@ -5,7 +5,7 @@ De 7 a 13 capas: qué cambia al completar el arnés de un equipo de agentes.
 
 Construí el mismo producto dos veces con el mismo sistema. La diferencia no fueron los modelos —los mismos— sino cuántas capas de arnés tenía cada versión.
 
-Un arnés (harness) es toda la infraestructura que rodea al modelo para convertirlo en agente: el loop, las herramientas, la memoria, la planificación, la verificación, la entrega. El principio se repite en la literatura: el modelo razona, el arnés actúa. En un análisis de Claude Code, el 1,6% del código es lógica del modelo; el 98,4% es arnés.
+Un arnés es toda la infraestructura que rodea al modelo para convertirlo en agente: el loop, las herramientas, la memoria, la planificación, la verificación, la entrega. El principio se repite en la literatura: el modelo razona, el arnés actúa. En un análisis de Claude Code, el 1,6% del código es lógica del modelo; el 98,4% es arnés.
 
 La v2 era un arnés parcial: ~7 de 13 capas. La descomposición de tareas la hacía yo, la verificación era manual, el merge también.
 
