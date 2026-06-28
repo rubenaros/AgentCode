@@ -241,6 +241,7 @@ pero no un sustituto de Kimi K2.6 para trabajo autónomo multi-archivo.
 
 ## Referencias
 
+- [instalacion-qwen-vllm-opencode.md](./instalacion-qwen-vllm-opencode.md) — guía reproducible: venv con uv, vLLM, parser de tool-calling y plumbing en opencode.
 - [env-baseline-v4.md](./env-baseline-v4.md) — baseline v4/v5, razonamiento del freeze del overlay.
 - `scripts/setup-petdesk-v5-stats.sh` — autonomía (camino A): auto-merge gateado por CI.
 - `scripts/setup-petdesk-v6-sdd.sh` — v6 con SDD; lección del reset de baseline.
