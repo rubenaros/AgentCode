@@ -232,7 +232,7 @@ pero no un sustituto de Kimi K2.6 para trabajo autónomo multi-archivo.
 ## Estado / próximos pasos
 
 - [x] Paso 1 — levantar vLLM con Qwen2.5-Coder-14B-AWQ (16K ctx, fp16 KV)
-- [~] Paso 2 — plumbing opencode → vLLM (provider custom validado a nivel API; falta validar el detalle exacto en Multica Custom Args)
+- [x] Paso 2 — plumbing aplicado: provider `vllm` agregado al `opencode.jsonc` (aditivo, `model` global sigue en Kimi; backup en `opencode.jsonc.pre-v7.bak`). vLLM arriba y validado por curl (tool-calling OK). Falta solo la validación end-to-end vía Multica Custom Args, que ocurre en el paso 5.
 - [x] Paso 3 — smoke test del tool-calling resuelto (gate pasado: `add → {"a":17,"b":25}`, parser community `qwen2_5_coder`)
 - [x] Paso 4 — `v7-baseline` ya creada (`6390947a` = 599749d6 + ci-trigger fix, con `ci.yml`); PR #15 ya estaba MERGED, no había ramas `feat/v6-stats-*` colgando. Limpieza: borradas las 6 ramas viejas `feat/v4-stats-*` y `feat/v5-stats-*` (PRs #8–#13, todos mergeados). El remoto queda con `main` + `v4/v5/v6/v7-baseline`.
 - [ ] Paso 5 — 3 corridas del Stats Dashboard vía Multica (`temperature=0`)
