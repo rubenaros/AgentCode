@@ -234,7 +234,7 @@ pero no un sustituto de Kimi K2.6 para trabajo autónomo multi-archivo.
 - [x] Paso 1 — levantar vLLM con Qwen2.5-Coder-14B-AWQ (16K ctx, fp16 KV)
 - [~] Paso 2 — plumbing opencode → vLLM (provider custom validado a nivel API; falta validar el detalle exacto en Multica Custom Args)
 - [x] Paso 3 — smoke test del tool-calling resuelto (gate pasado: `add → {"a":17,"b":25}`, parser community `qwen2_5_coder`)
-- [ ] Paso 4 — `v7-baseline` + limpieza de restos del v6 (PR #15 trabado, ramas `feat/v6-stats-*`)
+- [x] Paso 4 — `v7-baseline` ya creada (`6390947a` = 599749d6 + ci-trigger fix, con `ci.yml`); PR #15 ya estaba MERGED, no había ramas `feat/v6-stats-*` colgando. Limpieza: borradas las 6 ramas viejas `feat/v4-stats-*` y `feat/v5-stats-*` (PRs #8–#13, todos mergeados). El remoto queda con `main` + `v4/v5/v6/v7-baseline`.
 - [ ] Paso 5 — 3 corridas del Stats Dashboard vía Multica (`temperature=0`)
 - [ ] Paso 6 — juez a ciegas (judgment-day sobre los diffs finales)
 - [ ] Paso 7 — síntesis y baseline `env-baseline-v7.md`
