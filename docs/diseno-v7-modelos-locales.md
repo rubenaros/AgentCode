@@ -1,8 +1,10 @@
 # Diseño v7 — Modelos locales (Qwen2.5-Coder-14B en vLLM)
 
-> **Estado: diseño — serving + tool-calling resueltos, pre-corridas.** Fecha: 2026-06-27
-> (actualizado 2026-06-28). Este documento define el experimento antes de correrlo; los
-> resultados irán en un baseline aparte (`env-baseline-v7.md`) cuando se ejecute.
+> **Estado: CERRADO con veredicto (2026-06-28).** El serving, el tool-calling y el plumbing
+> funcionaron, pero el experimento **no pudo medir la calidad del código del modelo local**:
+> el agente nunca arrancó porque el prompt base del harness (20.5K tokens) no deja espacio en
+> un contexto de ≤24K. El cuello de botella resultó ser el **harness, no el modelo**. Veredicto
+> completo al final, en [Resultado](#resultado-veredicto-2026-06-28).
 >
 > **Cambio de modelo (2026-06-28):** el modelo elegido pasó de **Devstral-Small-2507** a
 > **Qwen2.5-Coder-14B-Instruct-AWQ**. Devstral-24B entraba en 16 GB pero dejaba solo ~0.66 GB
@@ -232,12 +234,55 @@ pero no un sustituto de Kimi K2.6 para trabajo autónomo multi-archivo.
 ## Estado / próximos pasos
 
 - [x] Paso 1 — levantar vLLM con Qwen2.5-Coder-14B-AWQ (16K ctx, fp16 KV)
-- [x] Paso 2 — plumbing aplicado: provider `vllm` agregado al `opencode.jsonc` (aditivo, `model` global sigue en Kimi; backup en `opencode.jsonc.pre-v7.bak`). vLLM arriba y validado por curl (tool-calling OK). Falta solo la validación end-to-end vía Multica Custom Args, que ocurre en el paso 5.
+- [x] Paso 2 — plumbing aplicado: provider `vllm` en `opencode.jsonc`, `temperature=0` forzado server-side (`--override-generation-config`), `limit` del modelo para capar `max_tokens`.
 - [x] Paso 3 — smoke test del tool-calling resuelto (gate pasado: `add → {"a":17,"b":25}`, parser community `qwen2_5_coder`)
-- [x] Paso 4 — `v7-baseline` ya creada (`6390947a` = 599749d6 + ci-trigger fix, con `ci.yml`); PR #15 ya estaba MERGED, no había ramas `feat/v6-stats-*` colgando. Limpieza: borradas las 6 ramas viejas `feat/v4-stats-*` y `feat/v5-stats-*` (PRs #8–#13, todos mergeados). El remoto queda con `main` + `v4/v5/v6/v7-baseline`.
-- [ ] Paso 5 — 3 corridas del Stats Dashboard vía Multica (`temperature=0`)
-- [ ] Paso 6 — juez a ciegas (judgment-day sobre los diffs finales)
-- [ ] Paso 7 — síntesis y baseline `env-baseline-v7.md`
+- [x] Paso 4 — `v7-baseline` ya creada (`6390947a` = 599749d6 + ci-trigger fix); limpieza de ramas v4/v5.
+- ⊘ Paso 5 — **bloqueado**: el agente no arranca (loop de contexto, ver Resultado). No hubo diffs.
+- ⊘ Paso 6 — no ejecutable sin diffs del paso 5.
+- ⊘ Paso 7 — reemplazado por este veredicto (no se generó `env-baseline-v7.md`).
+
+## Resultado (veredicto, 2026-06-28)
+
+El experimento **no llegó a medir la calidad del código del modelo local** — y *por qué* no
+llegó es el hallazgo.
+
+### Qué SÍ funcionó (todo el plumbing)
+
+| Pieza | Estado |
+|---|---|
+| Serving Qwen-14B-AWQ en vLLM (16K y 24K) | ✅ |
+| Tool-calling | ✅ con el parser community `qwen2_5_coder` (el `hermes` stock falla en silencio) |
+| `temperature=0` determinista | ✅ `--override-generation-config '{"temperature": 0}'`, verificado byte-a-byte |
+| Provider en opencode + routing per-agent en Multica (`--model vllm/...`) | ✅ |
+
+### Qué lo frenó: el contexto que consume el harness
+
+El agente **nunca pudo empezar a trabajar**. El prompt base —antes de cualquier acción— es de
+**20.481 tokens fijos**: system prompt de orquestación de Multica (*"## Goal — complete the
+assigned issue using Multica commands…"*) + definiciones de tools de opencode. Eso choca con
+el contexto del modelo local:
+
+- **A 16K:** imposible (20.481 > 16.384). El agente entra en loop error → compactación → error.
+- **A 24K:** falla por **1 token** (20.481 + 4.096 de output = 24.577 > 24.576). Mismo loop.
+- **Mitigación intentada (desactivar engram MCP):** **no movió nada** — el prompt base quedó en
+  20.481 idéntico, incluso tras reiniciar el daemon. Engram no estaba en ese prompt; el peso es
+  el scaffolding de Multica + tools de opencode, **irreducible** sin desarmar el setup.
+
+### El veredicto
+
+> **El cuello de botella es el *harness*, no la calidad del modelo.** El overlay/orquestación
+> se diseñó asumiendo modelos de gran contexto (Kimi K2.6 ≈ 256K, donde 20K de overhead es
+> irrelevante). Un modelo local de contexto acotado (≤24K) es **estructuralmente incompatible**
+> con este stack agentic — independientemente de qué tan bueno sea su código.
+
+Para medir la calidad del modelo local haría falta **otro harness más liviano** (sin el
+scaffolding de orquestación pesado), lo que ya sería otro experimento — no "el mismo stack con
+modelo local". Subir a 32K en la laptop de 16 GB era VRAM al límite (gpu-mem-util ~0.96,
+riesgo OOM) por un margen de trabajo aún ajustado: se descartó.
+
+> Lección transversal para el arnés: una capa "modelo local barato" no es plug-in si las capas
+> de orquestación de arriba asumen contexto abundante. El costo en tokens de contexto del
+> harness es una restricción de diseño tan real como el costo en dólares de la API.
 
 ## Referencias
 
