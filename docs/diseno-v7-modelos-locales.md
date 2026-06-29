@@ -222,14 +222,19 @@ scores de SWE-bench dependen del scaffold):
 
 | Benchmark | Local 16 GB (Qwen2.5-Coder-14B) | Kimi K2.6 |
 |---|---|---|
-| SWE-bench Verified | 42.7 % | **80.2 %** |
+| SWE-bench Verified | **~19 %** (corregido — ver nota) | **80.2 %** |
 | LiveCodeBench v6 | ~24 % | **89.6 %** |
 | HumanEval+ (synthesis simple) | 87 % | ~saturado (≈ a la par) |
 
+> **Corrección (2026-06-29):** una versión previa de esta tabla atribuía **42,7 %** de SWE-bench
+> Verified al Qwen2.5-Coder-14B. Es erróneo: el número real bajo Agentless es **~19,4 %**
+> ([Seed-Coder paper](https://arxiv.org/pdf/2506.03524)). El 42,7 % era inconsistente —
+> superaba a fine-tunes SWE-específicos de 32B (que rondan 36-38 %).
+
 Lectura: en generación de una función el local está casi a la par; en loops agentic
-multi-archivo el gap ronda los **−37 puntos de SWE-bench**. La hipótesis a confirmar con el
-experimento es que un modelo local de 16 GB es un **editor competente de tareas acotadas**,
-pero no un sustituto de Kimi K2.6 para trabajo autónomo multi-archivo.
+multi-archivo el gap real ronda los **−61 puntos de SWE-bench**. La hipótesis se confirma con
+creces: un modelo local de 16 GB es un **editor competente de tareas acotadas**, pero no un
+sustituto de Kimi K2.6 para trabajo autónomo multi-archivo.
 
 ## Estado / próximos pasos
 
@@ -283,6 +288,45 @@ riesgo OOM) por un margen de trabajo aún ajustado: se descartó.
 > Lección transversal para el arnés: una capa "modelo local barato" no es plug-in si las capas
 > de orquestación de arriba asumen contexto abundante. El costo en tokens de contexto del
 > harness es una restricción de diseño tan real como el costo en dólares de la API.
+
+El corolario conceptual —por qué `Agente = LLM + Harness` no es una suma de módulos
+intercambiables sino una composición con contrato (`Harness∘LLM`)— quedó plasmado en
+[capas-harness-stack-v6.md §6](../research/capas-harness-stack-v6.md#6-corolario-el-harness-no-es-un-sumando-es-función-del-modelo).
+
+## Candidatos para un reintento (modelos ~7-9B)
+
+Si se reintentara con un modelo más chico —que libera VRAM para más contexto— estos son los
+candidatos reales del rango 6-9B, con su SWE-bench Verified medido (investigación 2026-06-29):
+
+| Modelo | Params | SWE-bench Verified | Tool-calling en vLLM | VRAM (4-bit) |
+|---|---|---|---|---|
+| **SWE-Dev-7B** (fine-tune SWE de Qwen2.5-Coder-7B) | 7B | **23.4 %** | ✅ mismo parser community `qwen2_5_coder` | ~5 GB |
+| **Seed-Coder-8B-Instruct** (ByteDance) | 8B | **19.2 %** | ❓ sin confirmar | ~5 GB |
+| SWE-SynInfer-7B | 7B | 18.2 % | ✅ (familia Qwen) | ~5 GB |
+| SWE-Gym-7B | 7B | 10.6 % | ✅ | ~5 GB |
+| Qwen2.5-Coder-7B-Instruct (base) | 7B | ~6.3 % | ✅ | ~5 GB |
+| *Qwen2.5-Coder-14B (el que usamos)* | 14B | 19.4 % | ✅ | 9.3 GB |
+| GLM-4.7-Flash | MoE grande | alto | ✅ (`--tool-call-parser glm47`) | **no entra en 16 GB** |
+| DeepSeek-Coder-V2-Lite | 16B MoE (2.4B act.) | bajo en agentic | parcial (PR en vLLM) | ~9 GB (no gana VRAM) |
+
+**El insight clave:** bajar de 14B a 7-8B **no pierde capacidad agéntica** — el 14B real (~19,4 %)
+y un 8B como Seed-Coder (19,2 %) están **empatados**, pero el 8B usa la mitad de VRAM y libera el
+contexto que era el cuello. Para *este* experimento, un 8B es estrictamente mejor que el 14B.
+
+**Recomendación:** **SWE-Dev-7B** (el más alto del rango, y su base Qwen2.5-Coder-7B reusa el
+parser que ya resolvimos — cero plumbing nuevo; *caveat:* entrenado para Agentless/OpenHands,
+puede no transferir a opencode/Multica). Alternativa neutra: **Seed-Coder-8B**, verificando antes
+su tool-calling en vLLM.
+
+**Advertencia honesta:** ninguno cambia el veredicto. El techo del rango es **~19-23 %** contra
+**~80 %** de Kimi → el modelo local fallaría ~3 de cada 4 tareas agénticas, y esos números son
+bajo scaffolds optimizados (Agentless/OpenHands); bajo el harness pesado de opencode/Multica
+rendirían **menos**. Un reintento solo confirmaría el piso, no la viabilidad como agente autónomo.
+
+> *Método: búsqueda liviana, no verificación adversarial. Los SWE-bench varían por scaffold —
+> orden de magnitud, no decimales. Fuentes: [Skywork-SWE](https://arxiv.org/html/2506.19290v1)
+> (SWE-Dev/SWE-Gym/SynInfer 7B), [Seed-Coder](https://arxiv.org/pdf/2506.03524) (8B y 14B),
+> [SWE-bench Verified leaderboard](https://llm-stats.com/benchmarks/swe-bench-verified-(agentic-coding)).*
 
 ## Referencias
 

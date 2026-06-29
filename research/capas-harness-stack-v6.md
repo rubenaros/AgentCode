@@ -116,6 +116,60 @@ el valor diferenciador del stack vive en las capas agregadas (opencode + gentle-
 
 ---
 
+## 6. Corolario: el harness no es un sumando, es función del modelo
+
+Las secciones 2–5 descomponen el agente capa por capa. Esa descomposición invita a leer
+**Agente = LLM + Harness** como una *suma de módulos intercambiables*: cambiás el modelo y el
+harness sigue funcionando, como reemplazar una pieza. El experimento v7 —servir un modelo
+local en lugar del API, manteniendo el mismo harness— mostró que esa lectura es **falsa**. Ver
+[diseño y veredicto del v7](../docs/diseno-v7-modelos-locales.md).
+
+**El `+` esconde un contrato bidireccional.** El harness y el modelo no son independientes: cada
+uno presupone propiedades del otro. Cuando esos supuestos no coinciden, el agente no degrada —
+no existe.
+
+| El harness asume del modelo | El modelo exige del harness |
+|---|---|
+| Contexto abundante (que quepa el scaffold) | Que el scaffold quepa en su ventana |
+| Capacidad agentic (decidir tools, editar multi-archivo) | Tools parseables, prompts digeribles |
+
+**Evidencia del v7 (medida).** El scaffold del harness (capa 2 + orquestación) ocupa **~20,5K
+tokens fijos** antes de cualquier acción. Eso choca con el modelo local:
+
+- Contexto servible en la GPU de 16 GB (Qwen2.5-Coder-14B AWQ): **~16–24K**. El scaffold no
+  deja margen de trabajo → el agente entra en loop de compactación y nunca arranca.
+- El mismo scaffold sobre Kimi K2.6 (~256K de contexto) es el ~8% de la ventana: irrelevante.
+  El harness no estaba mal diseñado; estaba diseñado **para otra clase de modelo**.
+- Y aunque entrara: un modelo local chico colapsa en trabajo agentic (Qwen2.5-Coder-7B ≈ **6%
+  SWE-bench Verified**), así que la capa 1 tampoco cumple el contrato de capacidad.
+
+**La forma precisa.** No es `Agente = LLM + Harness` (sumandos independientes), sino:
+
+> **Agente = Harness∘LLM**, válido sólo dentro de una *clase de compatibilidad* — el harness
+> calibrado para el contexto y la capacidad del modelo concreto. `Harness(Kimi-256K)` y
+> `Harness(local-16K)` no pueden ser el mismo objeto.
+
+**El matiz que lo hace accionable.** La lección no es "el harness no importa" — es lo contrario.
+El trabajo real del harness es *adaptar la tarea a lo que el modelo puede dar*. Hay dos clases:
+
+- **Harness que ahorra recursos del modelo:** RAG en vez de cargar todo, sub-agentes,
+  compactación agresiva, trocear en micro-tareas. Hace rendir a un modelo limitado (por eso un
+  scaffold SWE-específico sube al 7B de ~6% a ~23%).
+- **Harness que consume recursos del modelo:** scaffold verboso, contexto cargado entero,
+  orquestación sobre orquestación. Asume abundancia.
+
+El stack actual (Multica + opencode + gentle-ai) es de la segunda clase: optimizado para
+modelos de API de gran contexto. Un modelo local necesita un harness de la primera.
+
+**Implicación para las 13 capas.** No son aditivas ni libremente intercambiables: **tienen
+contratos entre sí.** La capa 1 (modelo) y la 2/6a (scaffold + contexto de trabajo) comparten
+un presupuesto de contexto; la 1 y la 7/8 (planificación + orquestación) comparten un
+presupuesto de capacidad. Una capa "modelo local barato" no es plug-in si las capas de arriba
+asumen contexto y capacidad abundantes. El costo en *tokens de contexto* y la *capacidad
+mínima* son cláusulas de acoplamiento tan reales como el costo en dólares.
+
+---
+
 ## Fuentes
 
 - [Anthropic — Building Effective Agents](https://www.anthropic.com/research/building-effective-agents)
