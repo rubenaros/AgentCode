@@ -19,6 +19,7 @@ Notes are written in **Spanish**; match that language when adding to `research/`
 **Docs — Retrospectivas y planning**:
 - `docs/COMO-LO-HICIMOS.md` — retrospectiva completa del showcase PetDesk v1: arquitectura, flujo, errores, receta, costos reales, playbook paso a paso, análisis 🤖/👤 de lo autónomo vs manual.
 - `docs/QUE-APRENDIMOS-V2.md` — plan v2 (las 8 mejoras + apuesta) y evaluación de frameworks SDD (OpenSpec, GitHub Spec-Kit). Decisión: adoptar 4 patrones sin instalar ninguno. Incluye **Anexo A** con resultados reales del v2 ejecutado.
+- `docs/MODELOS-LOCALES-AGENTICOS.md` — retrospectiva del arco "¿puede un modelo local chico hacer tareas agénticas?": 8 corridas (Ornith-9B, Gemma-12B-fable5, SWE-Next-14B) en 16GB, evolución del harness (mínimo→v2 guardrails→v3 directed verify), conclusión (harness=proceso, modelo=corrección; doble bind contexto↔harness), y el plan del experimento definitivo con Qwen3.6-27B dense en 24GB. Incluye comparación dense vs MoE.
 
 **Docs — Baselines de entorno** (mediciones reproducibles):
 - `docs/env-baseline-v3.md` — snapshot del entorno congelado del v3 + smoke test de compatibilidad del upgrade de opencode. Registro histórico.
