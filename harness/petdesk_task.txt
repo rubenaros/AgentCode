@@ -1,0 +1,39 @@
+You are working in a Next.js + TypeScript repo (petdesk-v2), already cloned and with dependencies installed in WORKDIR. Implement a complete feature.
+
+BEFORE YOU START (mandatory, in order):
+1. Read CONSTITUTION.md at the repo root — hard project rules.
+2. Read docs/PLAN.md — full architecture of petdesk-v2.
+3. Read src/domain/types.ts — the StatsBundle type (already defined by the architect, DO NOT MODIFY).
+
+FEATURE — Stats Dashboard for PetDesk (implement it all):
+
+1. StatsEngine in src/engine/stats.ts: a class with compute(rangeStart: Date, rangeEnd: Date): StatsBundle.
+   - appointmentsTotal = appointments whose `start` falls in [rangeStart, rangeEnd).
+   - appointmentsBooked/Completed/Cancelled = filtered by `status`. The sum == total.
+   - cancellationRate = cancelled/total, 4 decimals. If total=0 -> 0.
+   - occupancyRate = (durationMin of booked+completed) / (working minutes 9:00-18:00 UTC across the days in range). 0..1, 4 decimals.
+   - topServicesByBookings / topServicesByCancellations / topClientsByVisits = top 5, descending, stable tie-break by id.
+
+2. API GET in src/app/api/stats/route.ts:
+   - Accepts ?start=ISO&end=ISO. If missing, use the last 30 days.
+   - Instantiate StatsEngine with the shared repo singleton (src/infra/sharedInstances.ts).
+   - Returns { stats: StatsBundle }.
+
+3. Dashboard UI — an "Estadisticas" section above the feed in src/app/dashboard/page.tsx:
+   - Shows: total appointments, cancellation rate (%), occupancy (%), top 3 services by bookings, top 3 by cancellations.
+   - Fetch the endpoint on mount + poll every 5s (there is already polling for appointments — add to it).
+   - Simple Tailwind, aligned with the rest.
+
+4. Tests:
+   - Engine unit tests in tests/engine.stats.test.ts (seeded repo, >=6 tests).
+   - e2e with InMemoryRepo in tests/stats.e2e.test.ts (a week with mixed status: appointmentsTotal=10, cancellationRate=0.2, ordered tops).
+   - Edge cases in tests/engine.stats.edge.test.ts: empty range, all cancelled, occupancy 100%, ties (stable sort).
+
+RESTRICTIONS — do NOT modify src/domain/, tests/contracts/, or CONSTITUTION.md. The StatsBundle type already exists.
+
+ACCEPTANCE — the task is done only when ALL of these pass (run them yourself):
+  npm test        (all green)
+  npm run lint    (0 errors)
+  npm run build   (succeeds)
+
+Work autonomously: read what you need, implement, run the checks, fix failures, repeat until all three pass. Then reply DONE: with a summary of what you implemented and the final check results.
