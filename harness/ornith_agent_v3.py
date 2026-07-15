@@ -15,6 +15,7 @@ Targets the observed failure modes:
 
 Usage: ornith_agent_v2.py <workdir> <task_file> [max_steps]
 """
+import difflib
 import json
 import os
 import re
@@ -23,7 +24,12 @@ import sys
 import urllib.request
 from pathlib import Path
 
+# Backend: "ollama" (native /api/chat) or "openai" (llama-server /v1/chat/completions).
+# The PrismML llama.cpp fork (ternary Bonsai) only speaks the OpenAI shape.
+BACKEND = os.environ.get("AGENT_BACKEND", "ollama").lower()
 OLLAMA = "http://localhost:11434/api/chat"
+BASE_URL = os.environ.get("AGENT_BASE_URL", "http://localhost:8080")
+OPENAI_URL = BASE_URL.rstrip("/") + "/v1/chat/completions"
 MODEL = os.environ.get("AGENT_MODEL", "hf.co/mradermacher/SWE-Next-14B-GGUF:Q4_K_M")
 TEMP = float(os.environ.get("AGENT_TEMP", "0.6"))
 TOP_P = float(os.environ.get("AGENT_TOPP", "0.8"))
@@ -41,6 +47,7 @@ Work in phases and DO NOT get stuck reading:
   1) EXPLORE briefly — read only the files you truly need (constitution, plan, the type, 1-2 examples).
   2) IMPLEMENT — create every required file with write_file. This is the important phase.
   3) VERIFY — run `npm test`, read failures, fix, repeat until green. Also `npm run lint` and `npm run build`.
+     When FIXING, use str_replace to change only the broken snippet — do NOT rewrite whole files.
 Reply "DONE: <summary>" ONLY when npm test, lint and build all pass. Never fake tool results."""
 
 TOOLS = [
@@ -53,6 +60,9 @@ TOOLS = [
     {"type": "function", "function": {"name": "write_file",
         "description": "Create/overwrite a file (path relative to WORKDIR).",
         "parameters": {"type": "object", "properties": {"path": {"type": "string"}, "content": {"type": "string"}}, "required": ["path", "content"]}}},
+    {"type": "function", "function": {"name": "str_replace",
+        "description": "Edit a file IN PLACE: replace the exact snippet old_str with new_str. PREFER this over write_file for FIXES — send ONLY the small snippet that changes, never the whole file. The file must already exist.",
+        "parameters": {"type": "object", "properties": {"path": {"type": "string"}, "old_str": {"type": "string"}, "new_str": {"type": "string"}}, "required": ["path", "old_str", "new_str"]}}},
 ]
 
 READ_TOOLS = {"read_file"}
@@ -64,7 +74,49 @@ OFFSCOPE = re.compile(r"\b(wrangler|playwright|vercel|docker|next\s+(dev|start)|
 
 TOOL_ALIASES = {"execute_bash": "run_bash", "bash": "run_bash", "shell": "run_bash",
                 "terminal": "run_bash", "exec": "run_bash", "cat_file": "read_file",
-                "create_file": "write_file", "edit_file": "write_file"}
+                "create_file": "write_file", "edit_file": "write_file",
+                "replace": "str_replace", "search_replace": "str_replace",
+                "apply_patch": "str_replace", "edit": "str_replace"}
+
+
+def apply_str_replace(text, old, new):
+    """Replace `old` with `new` in `text`, tolerant to the whitespace drift small
+    models produce. Returns (new_text, note) on success or (None, error_hint).
+    On a miss it hands back the current file text around the closest line so the
+    model can copy the exact snippet WITHOUT having to read the file (reads are
+    blocked during implement/verify)."""
+    if not old:
+        return None, ('str_replace uses "old_str"/"new_str", NOT "content". Retry like: '
+                      '{"path": "src/x.ts", "old_str": "<exact current snippet>", '
+                      '"new_str": "<replacement>"}')
+    exact = text.count(old)
+    if exact == 1:
+        return text.replace(old, new, 1), "exact"
+    if exact > 1:
+        return None, f'"old_str" matches {exact} places — add more surrounding context to make it unique'
+    # whitespace-normalized line-block match (indentation/trailing drift)
+    old_lines = [l.strip() for l in old.strip("\n").split("\n") if l.strip()]
+    tlines = text.split("\n")
+    norm = [l.strip() for l in tlines]
+    L = len(old_lines)
+    if L:
+        hits = [i for i in range(len(norm) - L + 1) if norm[i:i + L] == old_lines]
+        if len(hits) == 1:
+            i = hits[0]
+            nb = new.strip("\n").split("\n") if new else []
+            return "\n".join(tlines[:i] + nb + tlines[i + L:]), "whitespace-normalized"
+        if len(hits) > 1:
+            return None, f'"old_str" (ignoring whitespace) matches {len(hits)} places — add more context'
+    # no match: show the current text around the closest line
+    anchor = next((l for l in old.split("\n") if l.strip()), "")
+    best = difflib.get_close_matches(anchor.strip(), [l for l in norm if l], n=1, cutoff=0.5)
+    if best:
+        i = norm.index(best[0])
+        lo, hi = max(0, i - 4), min(len(tlines), i + 6)
+        ctx = "\n".join(f"{j + 1}: {tlines[j]}" for j in range(lo, hi))
+        return None, ('"old_str" not found. Here is the current file near the closest line — '
+                      'copy the EXACT text (real indentation) into old_str and retry:\n' + ctx)
+    return None, '"old_str" not found — wrong file, or the text already changed'
 
 
 def run_tool(name, args, workdir):
@@ -87,24 +139,57 @@ def run_tool(name, args, workdir):
             return (Path(workdir) / g("path", "file")).read_text()[:MAX_OUT]
         if name == "write_file":
             rel, content = g("path", "file"), g("content", "text")
+            if not rel:
+                return ('[error: write_file needs a non-empty "path". Put path FIRST, e.g. '
+                        '{"path": "tests/x.test.ts", "content": "..."} — do not omit it.]')
             p = Path(workdir) / rel
             p.parent.mkdir(parents=True, exist_ok=True)
             p.write_text(content)
             return f"[wrote {len(content)} bytes to {rel}]"
+        if name == "str_replace":
+            rel = g("path", "file")
+            if not rel:
+                return ('[error: str_replace needs a non-empty "path" — put it FIRST, e.g. '
+                        '{"path": "src/x.ts", "old_str": "...", "new_str": "..."}]')
+            p = Path(workdir) / rel
+            if not p.exists():
+                return f"[error: {rel} does not exist yet — create it with write_file first, then edit]"
+            old, new = g("old_str", "old"), g("new_str", "new")
+            updated, note = apply_str_replace(p.read_text(), old, new)
+            if updated is None:
+                return f"[str_replace failed on {rel}: {note}]"
+            p.write_text(updated)
+            return f"[edited {rel} ({note}) — {len(old)} chars -> {len(new)}]"
         return f"[unknown tool: {name}]"
     except Exception as e:
         return f"[tool error: {e}]"
 
 
 def call_model(messages):
-    body = json.dumps({"model": MODEL, "messages": messages, "tools": TOOLS, "stream": False,
-        "think": THINK,
-        "options": {"temperature": TEMP, "top_p": TOP_P, "top_k": TOP_K, "num_ctx": NUM_CTX, "num_predict": NUM_PREDICT}}).encode()
+    if BACKEND == "openai":
+        # llama-server is run WITHOUT --jinja: it does NOT parse tool calls, so we do
+        # NOT send `tools` (they'd be ignored) and the model emits <tool_call> blocks
+        # as raw content that the lenient parser below recovers. This is what makes the
+        # loop robust: the server can no longer 500 on a big-`content` write with
+        # unescaped JSON — it just returns the text, truncated at worst, and the
+        # directed-verify loop makes the model rewrite it.
+        url = OPENAI_URL
+        payload = {"model": MODEL, "messages": messages, "stream": False,
+            "temperature": TEMP, "top_p": TOP_P, "top_k": TOP_K, "max_tokens": NUM_PREDICT}
+    else:
+        url = OLLAMA
+        payload = {"model": MODEL, "messages": messages, "tools": TOOLS, "stream": False,
+            "think": THINK,
+            "options": {"temperature": TEMP, "top_p": TOP_P, "top_k": TOP_K, "num_ctx": NUM_CTX, "num_predict": NUM_PREDICT}}
+    body = json.dumps(payload).encode()
     last = None
     for attempt in range(4):
         try:
-            with urllib.request.urlopen(urllib.request.Request(OLLAMA, data=body, headers={"Content-Type": "application/json"}), timeout=600) as r:
-                return json.load(r).get("message", {})
+            with urllib.request.urlopen(urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"}), timeout=600) as r:
+                data = json.load(r)
+                if BACKEND == "openai":
+                    return (data.get("choices") or [{}])[0].get("message", {})
+                return data.get("message", {})
         except Exception as e:
             last = e
             print(f"  [call error {attempt+1}: {e}] retry", flush=True)
@@ -119,6 +204,30 @@ def _unescape(s):
     return s.replace("\\n", "\n").replace('\\"', '"').replace("\\t", "\t").replace("\\\\", "\\")
 
 
+def _slice_field(body, start_key, stop_keys):
+    """Recover one multiline string value from mangled JSON: slice from `start_key`'s
+    marker up to whichever `stop_keys` marker comes next (or end of string)."""
+    idx = body.find(f'"{start_key}"')
+    if idx == -1:
+        return None
+    seg = body[idx + len(start_key) + 2:]
+    c = seg.find(":")
+    if c == -1:
+        return None
+    val = seg[c + 1:].lstrip()
+    if val.startswith('"'):
+        val = val[1:]
+    cut = len(val)
+    for sk in stop_keys:
+        j = val.find(f'"{sk}"')
+        if j != -1:
+            cut = min(cut, j)
+    val = val[:cut]
+    val = re.sub(r'"\s*,?\s*$', "", val)          # trailing closing quote + comma
+    val = re.sub(r'\s*\}+\s*$', "", val)           # trailing braces
+    return _unescape(val)
+
+
 def lenient_json_args(body):
     """Recover args from JSON that is invalid due to LITERAL newlines inside a
     multi-line value (code content or heredoc cmd) — common with small models."""
@@ -128,6 +237,28 @@ def lenient_json_args(body):
         if m:
             args["path"] = m.group(1)
             break
+    if "path" not in args:
+        # this model appends a MANGLED path marker after the content, e.g.
+        #   </path":"tests/x.test.ts"}}   or   </path>: "tests/x.test.ts"
+        m = re.search(r'<\s*/?\s*path"?\s*[:>]*\s*"([^"\n]+)"', body)
+        if m:
+            args["path"] = m.group(1)
+    if "path" not in args:
+        # last resort: the LAST file-looking quoted token. The path trailer sits at the
+        # END, so prefer the last match over any dotted string embedded in the content.
+        ms = re.findall(r'"([\w./-]+\.[a-zA-Z0-9]+)"', body)
+        if ms:
+            args["path"] = ms[-1]
+    # str_replace carries TWO multiline fields; recover each by slicing from its
+    # marker to the next field marker (same technique as the single-content path).
+    if '"old_str"' in body or '"new_str"' in body:
+        o = _slice_field(body, "old_str", ("new_str", "path", "file"))
+        nw = _slice_field(body, "new_str", ("old_str", "path", "file"))
+        if o is not None:
+            args["old_str"] = o
+        if nw is not None:
+            args["new_str"] = nw
+        return args
     for key in ("cmd", "command", "content", "text"):
         idx = body.find(f'"{key}"')
         if idx != -1:
@@ -136,13 +267,47 @@ def lenient_json_args(body):
             val = seg[c + 1:].lstrip()
             if val.startswith('"'):
                 val = val[1:]
+            # This model frequently appends a MANGLED path marker AFTER the content
+            # (content-first ordering), which must NOT land inside the written file:
+            #   "content": "<code>\n</path>: "file.ts"}}     -> strip the </path... trailer
+            #   "content": "<code>", "path": "file.ts"}       -> strip the ,"path":"..." trailer
+            # Both are anchored to END-of-string so a legit mid-content "</path>" (SVG) survives.
+            val = re.sub(r'\s*<\s*/?\s*path\b["\s:>]*"?[\w./-]*"?\s*\}*\s*$', "", val)
+            val = re.sub(r'"\s*,\s*"(?:path|file|filename)"\s*:\s*"[^"]*"\s*\}*\s*$', "", val)
             val = re.sub(r'"\s*\}?\s*$', "", val)
             args["cmd" if key in ("cmd", "command") else "content"] = _unescape(val)
             break
     return args
 
 
+_TOOLCALL_RE = re.compile(r"<tool_call>\s*(.*?)\s*</tool_call>", re.DOTALL)
+
+
+def parse_toolcall_blocks(content):
+    """Parse Qwen-style <tool_call>{json}</tool_call> blocks. The tags are the
+    delimiter (not JSON braces), so big multi-line `content` with unescaped
+    newlines/quotes is recovered via lenient_json_args when strict JSON fails."""
+    calls = []
+    for block in _TOOLCALL_RE.findall(content or ""):
+        name_m = re.search(r'"name"\s*:\s*"([^"]+)"', block)
+        if not name_m:
+            continue
+        name = name_m.group(1)
+        try:
+            obj = json.loads(block)
+            args = obj.get("arguments", obj) if isinstance(obj, dict) else {}
+            if not isinstance(args, dict):
+                args = {}
+        except Exception:
+            args = lenient_json_args(block)
+        calls.append({"function": {"name": name.strip().lower(), "arguments": args}})
+    return calls
+
+
 def parse_content_tools(content):
+    tc = parse_toolcall_blocks(content)
+    if tc:
+        return tc
     calls = []
     for name, body in _FUNC_RE.findall(content or ""):
         params = _PARAM_RE.findall(body)
@@ -226,7 +391,19 @@ def main():
     workdir, task = sys.argv[1], Path(sys.argv[2]).read_text()
     max_steps = int(sys.argv[3]) if len(sys.argv) > 3 else 90
 
-    messages = [{"role": "system", "content": SYSTEM.replace("{workdir}", workdir)},
+    system = SYSTEM.replace("{workdir}", workdir)
+    if BACKEND == "openai":
+        # tools are not sent in the request (see call_model) — describe them here
+        system += ("\n\nTOOLS — to act, emit one or more blocks exactly like:\n"
+                   "<tool_call>\n{\"name\": \"write_file\", \"arguments\": {\"path\": \"src/x.ts\", \"content\": \"<file contents>\"}}\n</tool_call>\n"
+                   "Available: run_bash(cmd), read_file(path), write_file(path, content), "
+                   "str_replace(path, old_str, new_str). "
+                   "To FIX an existing file, PREFER str_replace with the small changed snippet — "
+                   "do NOT rewrite the whole file. Use write_file only to CREATE a new file. "
+                   "Emit the tool_call block(s) and nothing else when acting.")
+        if not THINK:
+            system += " /no_think"
+    messages = [{"role": "system", "content": system},
                 {"role": "user", "content": task}]
     phase = "explore"
     reads = writes = tests_run = fix_rounds = reads_impl = 0
@@ -238,16 +415,31 @@ def main():
 
     for step in range(1, max_steps + 1):
         # ---- context trim (keep it small so the guardrails don't blow the window) ----
+        # Stub OLD tool outputs AND old assistant turns. The latter is critical: a model
+        # that writes files echoes multi-KB `content`/tool_calls into assistant history;
+        # left unchecked they fill the whole window (the files are on disk anyway, so the
+        # history copy is dead weight). Keep the most recent few of each kind intact.
         tool_idxs = [i for i, m in enumerate(messages) if m.get("role") == "tool"]
-        for i in tool_idxs[:-6]:
+        for i in tool_idxs[:-4]:
             if not messages[i].get("_stub"):
                 messages[i]["content"] = "[old tool output trimmed]"
+                # demote to user so it isn't orphaned once its assistant tool_calls get stubbed
+                messages[i]["role"] = "user"
+                messages[i].pop("tool_call_id", None)
                 messages[i]["_stub"] = True
+        asst_idxs = [i for i, m in enumerate(messages) if m.get("role") == "assistant"]
+        for i in asst_idxs[:-3]:
+            m = messages[i]
+            if not m.get("_stub") and (len(m.get("content") or "") > 400 or m.get("tool_calls")):
+                m["content"] = "[earlier assistant turn trimmed — files already written to disk]"
+                m.pop("tool_calls", None)
+                m["_stub"] = True
         payload = [{k: v for k, v in m.items() if k != "_stub"} for m in messages]
 
         msg = call_model(payload)
         content = msg.get("content", "") or ""
-        tool_calls = msg.get("tool_calls") or (parse_content_tools(content) if content else [])
+        native_tc = msg.get("tool_calls")
+        tool_calls = native_tc or (parse_content_tools(content) if content else [])
         print(f"\n===== STEP {step} [{phase}] reads={reads} writes={writes} tests={tests_run} =====", flush=True)
         if content:
             print(f"[content] {content[:300]}", flush=True)
@@ -283,7 +475,7 @@ def main():
             key = f"{name}:{json.dumps(args, sort_keys=True)[:120]}"
 
             cmdstr = str(args.get("cmd", ""))
-            is_write = (name == "write_file") or (name == "run_bash" and bool(WRITE_BASH.search(cmdstr)))
+            is_write = (name in ("write_file", "str_replace")) or (name == "run_bash" and bool(WRITE_BASH.search(cmdstr)))
             is_read = (not is_write) and ((name in READ_TOOLS) or (name == "run_bash" and bool(READ_BASH.match(cmdstr))))
 
             # scope guard
@@ -319,7 +511,18 @@ def main():
 
             recent.append(key)
 
-        messages.append({"role": "tool", "content": "\n".join(results)})
+        joined = "\n".join(results)
+        if BACKEND == "openai" and not native_tc:
+            # calls were recovered from content (no tool_call_id to reference) — feed back as user
+            messages.append({"role": "user", "content": joined})
+        elif BACKEND == "openai":
+            tmsg = {"role": "tool", "content": joined}
+            tcid = (native_tc[0] or {}).get("id")
+            if tcid:
+                tmsg["tool_call_id"] = tcid
+            messages.append(tmsg)
+        else:
+            messages.append({"role": "tool", "content": joined})
 
         # ---- loop breaker: same call 3x in the tail ----
         if len(recent) >= 3 and len(set(recent[-3:])) == 1:
@@ -350,12 +553,13 @@ def main():
                 if allp:
                     print("\n>>> ALL GREEN — DONE", flush=True)
                     return
-                nudge("npm test passes but lint/build fail. Rewrite the offending file(s) with write_file "
-                      "to fix EXACTLY these, nothing else:\n" + format_errors(detail))
+                nudge("npm test passes but lint/build fail. Use str_replace to fix EXACTLY these in the "
+                      "offending file(s) — change only the broken snippet, nothing else:\n" + format_errors(detail))
             else:
                 print(f"  [HARNESS VERIFY] test FAIL (round {fix_rounds})", flush=True)
-                nudge("npm test FAILS. REWRITE the offending file(s) NOW with write_file to fix EXACTLY these "
-                      "errors. Do not read, do not run commands — just fix and rewrite the file:\n" + format_errors(raw))
+                nudge("npm test FAILS. Use str_replace NOW to fix EXACTLY these errors in the offending "
+                      "file(s) — change only the broken snippet. Do not read, do not run commands, do not "
+                      "rewrite whole files:\n" + format_errors(raw))
             if fix_rounds >= 30:
                 print("\n>>> FIX BUDGET EXHAUSTED", flush=True)
                 break
