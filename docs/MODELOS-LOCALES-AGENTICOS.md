@@ -23,24 +23,28 @@ Todos sobre la misma tarea, con harness propio (`ornith_agent*.py`, loop agénti
 | 5 | SWE-Next-14B | harness mínimo | ❌ | read-loop puro: 90 `cat`, 0 archivos |
 | 6 | SWE-Next-14B | **harness v2** (guardrails) | ❌ | rompió el read-loop, escribió 5 archivos, entró a verify (64 pasos), corrió `npm test` 3× — pero código roto, build FAIL |
 | 7 | SWE-Next-14B | **harness v3** (directed verify) | ❌ | loop cerrado 27 rondas + feedback nítido — el modelo **nunca arregló un import de 1 línea** |
+| 8 | Ternary-Bonsai-27B (Q2_0) | **harness v3 + edit tool**, GPU, 32K | ❌ (pero cerca) | **45/47 tests pasan** — código real, no alucina. No cierra 2 bugs de lógica sutiles en 6 rondas de verify; no adopta `str_replace` (vuelve a `write_file`) |
 
-**Marcador: 3 modelos, 8 corridas, 0 features funcionales.**
+**Marcador: 4 modelos, 9 corridas, 0 features completas** — pero el ternario cambió *cómo* se falla: de "código roto" a "casi verde, atascado en la última milla".
 
 ## La evolución del harness (y qué probó cada versión)
 
 1. **Mínimo** — loop pelado, 3 tools (`run_bash`, `read_file`, `write_file`), tool-calling nativo + parser XML de fallback. Probó: los modelos chicos **no se auto-scaffoldean** (read-loops, divagación, código roto).
 2. **v2 — guardrails en código** (`ornith_agent_v2.py`): forzado de fase (explore→implement→verify), loop-breaker, scope-guard, verificación forzada. System prompt ~200 tokens (barato). Probó: un harness fuerte **en código** rescata el **proceso** (el 14B recorrió el arco completo por primera vez) — pero no la **corrección** (código roto).
 3. **v3 — loop de verify cerrado y dirigido** (`ornith_agent_v3.py`): el harness corre `npm test` él mismo, parsea el error a un mensaje nítido y accionable, dirige al modelo a reescribir el archivo exacto, repite hasta verde. Read-block duro, detección de archivos por git (agnóstica al mecanismo bash/heredoc), aceptación honesta (exige que existan los archivos). Probó: **el confound de feedback está descartado** — con el error servido verbatim 27 veces, el 14B igual no aplica el fix.
+4. **v3 + edit tool** (`str_replace`): se agregó una tool de edición quirúrgica — reemplaza un snippet exacto en vez de reescribir el archivo entero, con **match tolerante a whitespace** y, en miss, devuelve el texto actual del archivo (fuzzy anchor vía `difflib`) para esquivar el read-block. Hipótesis: reescribir el archivo completo truncaba (`num_predict` corto), y un edit chico lo evitaría. Probó dos cosas: (a) el confound de truncamiento **no era el techo** — con el ternario los `write_file` completos ya salían bien; (b) **el modelo no adopta la tool nueva**: la intentó 1 vez con el schema mal (emitió `content` en vez de `old_str`/`new_str`, confundiéndola con `write_file`), vio el error dirigido, y la abandonó. `str_replace` es más raro en el training que `write_file` → bajo presión el modelo colapsa al schema familiar. **Y no importaba** — aunque el edit hubiera funcionado, el cuello de botella no era el mecanismo de escritura, era el diagnóstico del bug.
 
 ## Conclusiones (ganadas, no apresuradas)
 
 1. **El harness es la palanca del PROCESO.** El v3 llevó al 14B por explore→implement→verify→fix, cosa que solo no hacía. Y se puede hacer **fuerte sin ser gordo en contexto**: la inteligencia va en el código del harness (nudges cortos), no en un system prompt de 20K.
 
-2. **El modelo es el techo de la CORRECCIÓN.** Con el loop cerrado, el error nítido servido 27 veces, el patrón correcto a la vista y 27 intentos, SWE-Next-14B **no cambió `../../src/...` por `../src/...`**. Ningún harness fabrica una capacidad que el modelo no tiene — salvo que el harness *escriba el fix* (codemod), y ahí el modelo ya no hace nada.
+2. **El modelo es el techo de la CORRECCIÓN — y el techo NO es generar, es debuggear.** Con el loop cerrado, el error nítido servido 27 veces, el patrón correcto a la vista y 27 intentos, SWE-Next-14B **no cambió `../../src/...` por `../src/...`**. Ningún harness fabrica una capacidad que el modelo no tiene — salvo que el harness *escriba el fix* (codemod), y ahí el modelo ya no hace nada. **El ternario afinó dónde está exactamente el techo:** escribió **45/47 tests en verde** — código real, arquitectura sólida, cero alucinación de APIs — pero se trabó 6 rondas en 2 bugs de lógica sutiles (`cancellationRate` da 0 en vez de 0.5; off-by-one en el top-N) sin identificar la causa. **El piso no es "no sabe programar" — es "no puede debuggear sus propios errores sutiles".** La generación llegó a near-frontier; la auto-corrección de la última milla, no. Y contra el mito de que "los modelos chicos alucinan mucho para coding": **no alucinó** — falló en el diagnóstico, que es otra cosa.
 
 3. **El doble bind contexto↔harness.** Un modelo débil necesita un harness más fuerte, pero un harness fuerte cuesta contexto (el de Multica/opencode: **20.481 tokens irreducibles**, medido en v7). En 16GB no se pueden tener las dos cosas. Es **parcialmente escapable** poniendo el harness en código (barato), pero el **piso de capacidad** no lo escapa nada.
 
 4. **Dense > MoE, más grande = más confiable.** Consistente en todos lados: el Gemma dense fue más estable que su hermano MoE; los modelos chicos aflojan/divaga; la corrección es cuestión de escala.
+
+5. **Un 27B a Q2 NO es un 27B.** El ternario es un 27B **cuantizado a 2 bits** (`Q2_0`, 6.7GB) para entrar en 16GB. Escribe bien pero no debuggea — y esa es justo la capacidad que la cuantización agresiva se come primero (el razonamiento de última milla es lo más frágil a la pérdida de precisión). **Corolario directo para el experimento pendiente:** meter un 27B en 16GB *bajando los bits* da un modelo lisiado en lo que importa; Qwen3.6-27B hay que correrlo en Q6/24GB — no es un lujo, es la condición para medir capacidad real y no artefacto de cuantización. Refuerza el "engaño VRAM" de la sección de abajo desde el otro lado: no solo el MoE en poca VRAM está lisiado — un dense sobre-cuantizado también.
 
 ## Lo que dijo la investigación (deep-research, jun-jul 2026)
 
@@ -88,8 +92,14 @@ La misma familia tiene un **Qwen3.6-35B-A3B (MoE, 3B activos)** que el marketing
 
 ### Notas de reproducibilidad
 
-- Harness en `scratchpad/ornith_agent_v3.py` (efímero — re-crear desde esta doc si hace falta).
+- Harness en `harness/ornith_agent_v3.py` (**persistido y commiteado**, ya no efímero). Incluye el `edit` tool (`str_replace`) y el backend dual `ollama`/`openai`.
 - Gotchas de plumbing (modelos chicos emiten tool-calls sucios): aliasar `execute_bash`/`file_editor`→`run_bash`/`write_file`; parser lenient para JSON con newlines literales en `content`/`cmd`; `sed -n` evade el read-block (agregarlo a la lista de reads); la aceptación debe exigir que los archivos existan (si no, da falso-verde con feature ausente).
+- **Gotchas del ternario GPU** (fork PrismML llama.cpp, `harness/llama-prism/build-cuda/bin/llama-server`, modelo `harness/models/Ternary-Bonsai-27B-Q2_0.gguf`):
+  - Backend `AGENT_BACKEND=openai` (el fork solo habla formato OpenAI; se corre **sin `--jinja`** para que el modelo emita `<tool_call>` como content crudo que el parser lenient recupera).
+  - Puerto **8090**, no 8080 — el 8080 lo ocupa Multica (docker-proxy).
+  - Contexto **32K obligatorio** (`-c 32768`): con 16K el prompt overflowea (~15K tokens de reads) y llama-server devuelve **HTTP 400** → mata la corrida. La VRAM alcanza (9.5GB con el modelo cargado).
+  - El `edit` tool (`str_replace`) funciona (verificado con unit tests + end-to-end), pero **el modelo no lo usa** — dato de comportamiento, no bug del harness.
+  - Logs de referencia: `harness/run-ternary-gpu-edit.log` (crash 400 a 16K) y `harness/run-ternary-gpu-edit2.log` (la corrida buena a 32K).
 
 ---
 
