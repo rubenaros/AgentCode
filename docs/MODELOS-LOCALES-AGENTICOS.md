@@ -44,7 +44,15 @@ Todos sobre la misma tarea, con harness propio (`ornith_agent*.py`, loop agénti
 
 4. **Dense > MoE, más grande = más confiable.** Consistente en todos lados: el Gemma dense fue más estable que su hermano MoE; los modelos chicos aflojan/divaga; la corrección es cuestión de escala.
 
-5. **Un 27B a Q2 NO es un 27B.** El ternario es un 27B **cuantizado a 2 bits** (`Q2_0`, 6.7GB) para entrar en 16GB. Escribe bien pero no debuggea — y esa es justo la capacidad que la cuantización agresiva se come primero (el razonamiento de última milla es lo más frágil a la pérdida de precisión). **Corolario directo para el experimento pendiente:** meter un 27B en 16GB *bajando los bits* da un modelo lisiado en lo que importa; Qwen3.6-27B hay que correrlo en Q6/24GB — no es un lujo, es la condición para medir capacidad real y no artefacto de cuantización. Refuerza el "engaño VRAM" de la sección de abajo desde el otro lado: no solo el MoE en poca VRAM está lisiado — un dense sobre-cuantizado también.
+5. **Un 27B a Q2 NO es un 27B.** El ternario es un 27B **cuantizado a 2 bits** (`Q2_0`, 6.7GB) para entrar en 16GB. Escribe bien pero no debuggea — y esa es justo la capacidad que la cuantización agresiva se come primero (el razonamiento de última milla es lo más frágil a la pérdida de precisión). Meter un 27B en 16GB *bajando los bits* da un modelo lisiado en lo que importa. Refuerza el "engaño VRAM" de más abajo desde el otro lado: no solo el MoE en poca VRAM está lisiado — un dense sobre-cuantizado también.
+
+## Veredicto — el arco se cierra
+
+**La pregunta era: ¿existe un modelo local que entre en 16GB y cierre una tarea agéntica real? La respuesta, ganada en 9 corridas sobre 4 modelos, es NO.**
+
+Y sabemos exactamente por qué. No es serving, ni formato, ni truncamiento, ni feedback — todo eso lo resolvió el harness (v3 lleva al modelo por explore→implement→verify→fix, con el error servido verbatim). **El piso es la capacidad de debug de última milla, y esa capacidad vive por encima de lo que entra en 16GB.** El mejor caso que logramos —el ternario 27B-Q2— escribió 45/47 tests y ahí se quedó, incapaz de diagnosticar 2 bugs sutiles en 6 rondas. Bajar bits para caber en 16GB lisia justo lo que hace falta.
+
+**Esto no es un experimento fallido: es el resultado.** En 16GB, hoy (jul-2026), no hay modelo local que converja — no por accidente de configuración, sino por una relación estructural entre el tamaño que exige la corrección agéntica y la VRAM disponible. La única palanca que quedaría dentro de "local" es **más hardware** (una tarjeta de 24GB), que es una decisión de plata, no un experimento pendiente. El arco queda cerrado.
 
 ## Lo que dijo la investigación (deep-research, jun-jul 2026)
 
@@ -53,9 +61,11 @@ Todos sobre la misma tarea, con harness propio (`ornith_agent*.py`, loop agénti
 - **"Harness irrelevante" REFUTADO (0-3):** el harness SÍ importa, un modelo débil se beneficia de mejor scaffolding.
 - **En 7-14B dense no hay nada que converja** con harness mínimo. OpenRouter jun-2026, literal: *"7B-14B dense range: None."*
 
-## El próximo experimento — Qwen3.6-27B (pendiente de 24GB)
+## Fuera de alcance — dónde SÍ empezaría a converger (Qwen3.6-27B, requiere 24GB)
 
-El **tier 27B** es donde el coding agéntico empieza a funcionar de verdad. Qwen3.6-27B (Alibaba, 22-abr-2026, Apache 2.0, dense, 262K ctx) — números **verificados** (blog oficial + medios independientes):
+> **Nota, no continuación.** Esto ya no responde la pregunta del arco (*local en 16GB*) — la responde otra (*¿a qué tamaño converge?*) y exige hardware que rompe la restricción original. Queda documentado como referencia para el día que haya una tarjeta de 24GB, no como paso pendiente.
+
+El **tier 27B** es donde el coding agéntico empieza a funcionar de verdad — pero en Q6, que necesita ~24GB (ver Conclusión #5: a Q2 para caber en 16GB, el 27B queda lisiado en el debug). Qwen3.6-27B (Alibaba, 22-abr-2026, Apache 2.0, dense, 262K ctx) — números **verificados** (blog oficial + medios independientes):
 
 | Benchmark | Qwen3.6-27B | Nota |
 |---|---|---|
@@ -88,7 +98,7 @@ La misma familia tiene un **Qwen3.6-35B-A3B (MoE, 3B activos)** que el marketing
 - **Harness:** `ornith_agent_v3.py` (directed verify loop + read-block + feedback nítido), settings temp 0.6, think off, cap `num_predict`.
 - **Tarea:** el mismo Stats Dashboard de `petdesk-v2 @ v8-baseline`.
 - **Aceptación:** `npm test` + `lint` + `build` verdes, con los archivos del feature presentes.
-- **Hipótesis:** con 59.3 en Terminal-Bench, **converge** — arregla el import de 1 línea que el 14B no pudo en 27 rondas. Cierra la pregunta del arco: *"¿a qué tamaño converge un modelo local?"*.
+- **Hipótesis:** con 59.3 en Terminal-Bench, **converge** — cierra los 2 bugs de lógica que el ternario Q2 no pudo, y responde la pregunta *distinta*: *"¿a qué tamaño (y precisión) converge un modelo local?"*. No reabre el arco de 16GB, que ya cerró en NO.
 
 ### Notas de reproducibilidad
 
