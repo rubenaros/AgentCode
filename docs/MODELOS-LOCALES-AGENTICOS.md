@@ -111,6 +111,22 @@ La misma familia tiene un **Qwen3.6-35B-A3B (MoE, 3B activos)** que el marketing
   - El `edit` tool (`str_replace`) funciona (verificado con unit tests + end-to-end), pero **el modelo no lo usa** — dato de comportamiento, no bug del harness.
   - Logs de referencia: `harness/run-ternary-gpu-edit.log` (crash 400 a 16K) y `harness/run-ternary-gpu-edit2.log` (la corrida buena a 32K).
 
+### Gotcha de plumbing anticipado: el parser de `<think>` de llama.cpp corrompe el stream (Qwen3)
+
+Referencia externa: [*The Only Correct Way to Use llama.cpp with Qwen3.6-27B*](https://blog.gopenai.com/the-only-correct-way-to-use-llama-cpp-with-qwen3-6-27b-d550bd0605a7) (Andrew Zhu, may-2026). Aviso para el día del experimento de 24GB — **verificar antes de confiar**, no adoptar a ciegas.
+
+**El núcleo (correcto, y coincide con lo que ya vivimos):** el split reasoning/answer server-side de llama.cpp puede **corromper silenciosamente** el stream de un modelo que usa tags XML inline (`<think>…</think>`). La causa raíz honesta no es "parser de DeepSeek vs Qwen" (el propio código citado define `thinking_start_tag="<think>"` y una regla PEG para ellos) sino una **violación del prefijo en `string_diff`**: cuando el PEG re-asigna texto entre `reasoning_content` y `content` a medida que llegan tokens, el delta deja de ser prefijo del anterior → tags dropeados/duplicados, o `content`↔`reasoning` swapeados. No crashea: queda todo *un poco* mal (el peor tipo de bug).
+
+**La cura sensata:** servidor pasa texto crudo, cliente parsea. Arrancar con `--reasoning-format none` y separar el `<think>` uno mismo. **Es exactamente nuestra postura** — el harness v3 ya corre `no-jinja` y parsea tool-calls a mano; probablemente ya esquivamos este bug sin saberlo.
+
+**Errores del artículo (no copiar tal cual):**
+- El regex de su "cura" busca `<thinking`/`</thinking` (con `ing`) pero el modelo emite `<think>`/`</think>` → **nunca matchea**, cae al fallback y jamás separa el thinking. Anclar al marcador **estructural** `</think>\n\n`, no a cualquier `</think>`.
+- Su test estrella (pedir al modelo que imprima los tags literales) rompe *cualquier* splitter first-match, cliente incluido — mover el split de server a cliente **no** lo cura; sólo anclar al marcador estructural lo hace. Es un caso auto-referencial, no el modo de falla del uso normal.
+- `reasoning_format:"none"` en el **body** del request es dudoso: hasta donde sé es un flag de arranque del server, no un parámetro por-request. Si es no-op, esa parte del consejo es inofensiva pero inútil. Verificar contra el build.
+- Versiones/regresión (b9211, b9191, commit `5bf468a2f`, issue #23320): plausibles, sin verificar desde acá. Si nos apoyamos en la regresión, se confirma primero.
+
+**Directiva para el harness (si corremos Qwen3.6-27B en llama.cpp):** raw passthrough (`--reasoning-format none` o `no-jinja`); strip de `<think>…</think>` client-side anclando a `</think>\n\n`; **no** confiar en el split reasoning/content del server. Es una extensión chica de `ornith_agent_v3.py` (ya parsea tool-calls crudos). Valida la tesis del arco: **el que falla es el arnés (plumbing), no el modelo** — `Agente = Harness∘LLM`.
+
 ---
 
 *Memorias Engram relacionadas: `research/harness-context-doublebind`, `research/small-agentic-models-2026`, `research/qwen36-27b-candidate`, `sdd/v8-ornith/*`.*
