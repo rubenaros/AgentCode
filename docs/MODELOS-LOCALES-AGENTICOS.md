@@ -127,6 +127,35 @@ Referencia externa: [*The Only Correct Way to Use llama.cpp with Qwen3.6-27B*](h
 
 **Directiva para el harness (si corremos Qwen3.6-27B en llama.cpp):** raw passthrough (`--reasoning-format none` o `no-jinja`); strip de `<think>…</think>` client-side anclando a `</think>\n\n`; **no** confiar en el split reasoning/content del server. Es una extensión chica de `ornith_agent_v3.py` (ya parsea tool-calls crudos). Valida la tesis del arco: **el que falla es el arnés (plumbing), no el modelo** — `Agente = Harness∘LLM`.
 
+### Otra pieza de plumbing: KTransformers (correr un MoE gigante con VRAM modesta)
+
+Referencia externa: [`kvcache-ai/ktransformers`](https://github.com/kvcache-ai/ktransformers) (Apache 2.0, ~18K★, v0.6.3, activo a jul-2026). Framework de **inferencia (y fine-tuning) heterogénea CPU-GPU** para modelos **MoE grandes**.
+
+**La idea:** placement heterogéneo de expertos — *hot experts* en GPU, *cold experts* en CPU (NUMA-aware, kernels AMX/AVX, cuant INT4/INT8 CPU-side). Número estrella: **DeepSeek-V3/R1 (671B MoE) en una sola GPU de 24GB + ~382GB DRAM**, con 3–28× speedup (ya soportan DeepSeek-V4-Flash y Qwen3-Next).
+
+**Ataca el "engaño MoE-VRAM"** de la sección anterior — pero por el lado del *serving*, no del modelo: en vez de lisiar el MoE con cuantización brutal (IQ2 + offload ciego), hace el offload **inteligente** manteniendo precisión. Cambia lo *factible*, no lo *confiable*.
+
+**Lo que NO cambia (leer con precisión):**
+- **No rescata el arco de 16GB.** El perfil real es 24GB VRAM **+ un pool ENORME de DRAM** apuntando a MoEs gigantes → workstation/server, no el desktop del arco. Rompe la restricción original igual que Qwen3.6-27B Q6.
+- **No refuta "dense > MoE para agéntico"** (Conclusión de arriba): ese hallazgo es de **confiabilidad/profundidad**, no de VRAM. KTransformers hace *factible* correr el MoE; no lo hace mejor agente.
+
+**Encaje:** puro arnés (capa de serving), la contraparte del gotcha de llama.cpp — otra pieza que expande *qué modelo podés servir* sin tocar la capacidad de razonamiento. Relevante el día que la pregunta sea *"¿y si tengo una workstation con mucha RAM?"*, no la de 16GB local.
+
+### Aterrizaje en llama.cpp: `--n-cpu-moe` corre el 35B-A3B en tarjeta chica (misma técnica, sin KTransformers)
+
+El mismo principio de KTransformers (expertos fuera de la GPU) está en **llama.cpp vanilla** vía `--n-cpu-moe N`. Un post viral muestra Qwen3.6-35B-A3B en una RTX 3060 (12GB VRAM, 16GB RAM), 150K ctx, visión, ~45 tok/s. Config: `-ngl 99 --n-cpu-moe 26 -c 150000 -fa on -np 1 --cache-type-k q8_0 --cache-type-v q8_0 --no-mmproj-offload -b 2048 -ub 1024`.
+
+**Flags load-bearing (verificados):**
+- `--n-cpu-moe 26` — empuja expertos MoE a RAM del sistema. **El verdadero truco** (= KTransformers). El grueso del 35B vive en CPU/RAM; en GPU quedan attention + cómputo activo.
+- `--cache-type-k/v q8_0` — halvea el KV. Estimación propia (~48 capas, GQA): 150K en q8 ≈ ~7GB; en f16 ≈ ~14GB → no entraría. Tan load-bearing como el offload.
+- `--no-mmproj-offload` — projector de visión en CPU, ~0 VRAM extra.
+
+**Corrección al post (verificado contra fuente — flag correcto, explicación equivocada):** dice que `-np` "defaultea a 4 y 4×'ea el KV cache". **Falso.** El default de `--parallel` es `-1` (auto), y `-c`/`--ctx-size` es el presupuesto **TOTAL** del KV: con varios slots se **divide**, no se multiplica (`-c 150000 -np 4` = 4 slots de ~37.5K, mismo total que `-np 1`; issue [ggml-org/llama.cpp#11681](https://github.com/ggml-org/llama.cpp/issues/11681)). `-np 1` es correcto para mono-usuario, pero porque **le da los 150K enteros a una sola conversación**, no porque "evite un inflado 4×".
+
+**La trampa de las cifras:** 16GB RAM vs ~20GB de pesos (Q4_K_XL) → los expertos se **mmap-ean del disco** y paginan. Los ~45 tok/s son de **generación a contexto bajo con expertos calientes**; prompt-processing de 150K y ruteo a expertos fríos va **mucho más lento**. "Entra" ≠ "45 tok/s a 150K agéntico".
+
+**Lo que cambia para el arco (matiz honesto, NO reabre el veredicto):** es la 3ª instancia del mismo hecho (offload de expertos = serving, no capacidad), y corre justo el 35B-A3B que marcamos como el **peor para agéntico** ("afloja"). *Entrar* nunca fue el bloqueo de la conclusión de confiabilidad → `factible ≠ convergente`. **PERO**: esta config (MoE offloadeado con `--n-cpu-moe`) es la **única piedra sin dar vuelta en 16GB** — el arco probó densos 9-14B y el ternario 27B-Q2, nunca un MoE offloadeado. Candidato real para tu 3080 de 16GB (más holgada que la 3060 del post): servir el 35B-A3B con estos flags y apuntar `ornith_agent_v3.py` al mismo Stats Dashboard → mide directo si cierra los 2 bugs que el ternario no pudo, o si confirma el "afloja". Referencia externa: [llama.cpp server README](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md).
+
 ---
 
 *Memorias Engram relacionadas: `research/harness-context-doublebind`, `research/small-agentic-models-2026`, `research/qwen36-27b-candidate`, `sdd/v8-ornith/*`.*
