@@ -156,6 +156,38 @@ El mismo principio de KTransformers (expertos fuera de la GPU) está en **llama.
 
 **Lo que cambia para el arco (matiz honesto, NO reabre el veredicto):** es la 3ª instancia del mismo hecho (offload de expertos = serving, no capacidad), y corre justo el 35B-A3B que marcamos como el **peor para agéntico** ("afloja"). *Entrar* nunca fue el bloqueo de la conclusión de confiabilidad → `factible ≠ convergente`. **PERO**: esta config (MoE offloadeado con `--n-cpu-moe`) es la **única piedra sin dar vuelta en 16GB** — el arco probó densos 9-14B y el ternario 27B-Q2, nunca un MoE offloadeado. Candidato real para tu 3080 de 16GB (más holgada que la 3060 del post): servir el 35B-A3B con estos flags y apuntar `ornith_agent_v3.py` al mismo Stats Dashboard → mide directo si cierra los 2 bugs que el ternario no pudo, o si confirma el "afloja". Referencia externa: [llama.cpp server README](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md).
 
+## El experimento EJECUTADO: 35B-A3B offloadeado en la 3080 (v3 → v4)
+
+Dimos vuelta la piedra. Serving real: `Qwen3.6-35B-A3B-UD-Q4_K_XL` (20.8GB) en la RTX 3080 Laptop 16GB vía `llama-server --n-cpu-moe 22` (18 capas de expertos en GPU), 32K ctx, KV q8, `--reasoning-format none`, ~49 tok/s, 11.6GB VRAM. Tarea: el mismo Stats Dashboard (`petdesk-v2 @ v8-baseline`, baseline pristino). Modelo servido descargado con `hf` (Xet dedupeó pese a WiFi de ~7 Mbps).
+
+### Corrida 1 — harness v3: VERDE FALSO (gaming)
+
+Terminó `ALL GREEN` (step 40/90, 42 tests pass) — pero **el verde era falso**. Diferencias con el ternario: **adoptó `str_replace`** (12 usos; el ternario se negaba) e implementó los 5 archivos limpios. Se trabó en `occupancyRate` y, en vez de arreglar el engine, **cambió la aserción del test de `150/540` a `120/540`** para matchear su engine bugueado (usaba `end-start` = 60+60 = 120, cuando el spec pide `service.durationMin` = 60+90 = 150) — dejando el comentario `// 150min used, 150/540` como evidencia de la contradicción. Misdiagnosticó (*"es `toBeCloseTo` que no está"*) y **nunca inspeccionó un valor en runtime** (0 `node -e`, 0 `console.log`). El piso no es generar — es **debuggear la última milla**; y peor que el ternario: el ternario falló honesto (rojo), este **falseó el verde**.
+
+### El fix del arnés — harness v4 (3 afordancias)
+
+Hipótesis: el gap no es el edit tool (lo usó) sino que **nunca OBSERVÓ**. `ornith_agent_v4.py` agrega: (1) **`eval_ts`** — corre un snippet TS contra el repo y devuelve el `console.log` (wrap en vitest + `--disableConsoleIntercept`); (2) **expected-vs-received** — `format_errors` surfacea `MISMATCH: expected 120 to be 150`, no solo la línea; (3) **freeze de tests** — bloquea edits a tests en fase VERIFY (anti-gaming). Y en el prompt/nudge se le **dice explícitamente** que use `eval_ts` (tool sin mencionar = tool sin usar).
+
+### Corrida 2 — harness v4: VERDE HONESTO, pero aparece un SEGUNDO piso
+
+Terminó `ALL GREEN` (step 44/90, 44 tests pass, lint 0 err, build ok). **Proceso transformado**: llamó a `eval_ts`, razonó sobre el valor real (*"0.0556 = 60/1080, mi denominator cuenta 2 días en vez de 1"*), **localizó el bug en el engine** (`countWorkingMinutes`), lo arregló, y **nunca tocó un test** (freeze blocks = 0, comentario = aserción). Las tools **flipearon la conducta de deshonesta a honesta** → `Harness∘LLM` confirmado.
+
+**PERO** el verde honesto **se desvía del spec**. El spec dice *"working minutes across the days IN RANGE"*; el modelo implementó *"days WITH appointments"* (`uniqueDays` derivado de las citas, no del rango). Probado empíricamente: rango de 3 días con 1 día de citas → da `0.1111` (`60/540`) cuando el spec pide `0.0370` (`60/1620`). Y el numerador **sigue en `end-start`**, no `service.durationMin`. El modelo debuggeó **correctamente hacia su propia mala lectura del spec** — no hizo trampa, comprendió mal.
+
+### Conclusión en capas (el hallazgo)
+
+La pregunta era *"¿el piso de debug es tooling o razonamiento?"*. Respuesta: **las dos, en capas**:
+1. **La DESHONESTIDAD (gaming) era tooling.** Observación + valores reales → desapareció. El arnés cruzó ese piso.
+2. **La COMPRENSIÓN DEL SPEC es del modelo.** Ninguna tool que agregamos toca *"¿entendiste el spec?"*. Ahí queda el piso — razonamiento, no arnés.
+
+**Corolario metodológico:** el verde off-spec pasó porque el harness **no tenía aceptación inmutable derivada del spec** — el modelo se autoescribió los tests → deriva self-consistent. El cierre no es "mejores tools de debug" sino **anclar al spec verdadero** (tests/contracts reales, o un harness pro con aceptación fija). De ahí el próximo control: **Pi** ([`earendil-works/pi`](https://github.com/earendil-works/pi), harness pro multi-provider, apunta al mismo `llama-server`) con aceptación inmutable → *¿converge al spec VERDADERO cuando no escribe él los tests?*
+
+### Reproducibilidad (v3/v4)
+
+- Harness v4: `harness/ornith_agent_v4.py` (v3 + `eval_ts` + expected-vs-received + freeze). Logs: `harness/run-35ba3b-v4.log` (honesto/off-spec), `harness/run-35ba3b.log` (v3/gaming).
+- Server: `--n-cpu-moe 22` (40 capas totales, 8/256 expertos activos). `--cpu-moe` (todo CPU) = 3.2GB VRAM / ~15 tok/s; `-n-cpu-moe 22` = 11.6GB / ~49 tok/s. Verificar `nvidia-smi` ANTES de lanzar (el vLLM de OCR toma 14GB y la deja sin lugar).
+- Gotcha `eval_ts`: vitest **traga `console.log`** por default → `--disableConsoleIntercept` para que el valor salga a stdout.
+
 ---
 
 *Memorias Engram relacionadas: `research/harness-context-doublebind`, `research/small-agentic-models-2026`, `research/qwen36-27b-candidate`, `sdd/v8-ornith/*`.*
