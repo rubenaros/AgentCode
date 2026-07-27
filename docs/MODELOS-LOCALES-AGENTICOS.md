@@ -3,6 +3,19 @@
 > Retrospectiva del arco "¿puede un modelo local chico ejecutar tareas agénticas de coding?"
 > Hardware: **RTX 3080 Laptop, 16GB VRAM**. Tarea constante: el **Stats Dashboard** de `petdesk-v2 @ v8-baseline` (engine + API + UI + tests, con `npm test`/`lint`/`build` como aceptación).
 
+> ### ⚠️ Aviso de lectura — el veredicto de este documento fue REVERTIDO (27-jul-2026)
+>
+> Este documento es un registro cronológico, y por eso conserva conclusiones que después resultaron equivocadas. **Dos de ellas están refutadas** por el control ejecutado el 27-jul-2026, documentado en [El control con arnés ajeno](#el-control-con-arnés-ajeno-la-respuesta-era-sí):
+>
+> | Conclusión original | Estado |
+> |---|---|
+> | "No hay modelo local que entre en 16GB y cierre una tarea agéntica real" ([Veredicto](#veredicto--el-arco-se-cierra-superado)) | **REFUTADA** — 3 de 3 corridas correctas según spec |
+> | "La comprensión del spec es un piso del modelo; ningún arnés la cruza" ([Conclusión en capas](#conclusión-en-capas-el-hallazgo--capa-2-refutada)) | **REFUTADA** — mismo modelo, otro arnés, spec correcto |
+>
+> Las secciones afectadas quedan marcadas en su lugar, con el texto original intacto. La causa de ambos errores es la misma y está desarrollada en el capítulo nuevo: **el arnés con el que se medía era una variable del experimento, no un instrumento neutral.**
+>
+> Reporte publicable derivado de esto: [`MEDIUM-ARTICLE-LOCAL.md`](./MEDIUM-ARTICLE-LOCAL.md).
+
 ## La pregunta
 
 ¿Existe un modelo open-weight **chico** (7–14B, que entre en 16GB) capaz de **sostener y cerrar** una tarea agéntica real — leer el repo, implementar, correr tests, corregir hasta verde — sin depender de la nube?
@@ -46,7 +59,11 @@ Todos sobre la misma tarea, con harness propio (`ornith_agent*.py`, loop agénti
 
 5. **Un 27B a Q2 NO es un 27B.** El ternario es un 27B **cuantizado a 2 bits** (`Q2_0`, 6.7GB) para entrar en 16GB. Escribe bien pero no debuggea — y esa es justo la capacidad que la cuantización agresiva se come primero (el razonamiento de última milla es lo más frágil a la pérdida de precisión). Meter un 27B en 16GB *bajando los bits* da un modelo lisiado en lo que importa. Refuerza el "engaño VRAM" de más abajo desde el otro lado: no solo el MoE en poca VRAM está lisiado — un dense sobre-cuantizado también.
 
-## Veredicto — el arco se cierra
+## Veredicto — el arco se cierra ~~(SUPERADO)~~
+
+> **⚠️ SUPERADO el 27-jul-2026.** Este veredicto es incorrecto. Un modelo local en 16GB sí cierra la tarea, correcta según spec, 3 de 3 veces — ver [El control con arnés ajeno](#el-control-con-arnés-ajeno-la-respuesta-era-sí).
+>
+> El texto se conserva porque el razonamiento que lleva al error es el dato: las 9 corridas eran reales y el veredicto se sigue de ellas. Lo que falla es un supuesto tácito — que el arnés usado para medir era neutral. No lo era.
 
 **La pregunta era: ¿existe un modelo local que entre en 16GB y cierre una tarea agéntica real? La respuesta, ganada en 9 corridas sobre 4 modelos, es NO.**
 
@@ -64,6 +81,8 @@ Y sabemos exactamente por qué. No es serving, ni formato, ni truncamiento, ni f
 ## Fuera de alcance — dónde SÍ empezaría a converger (Qwen3.6-27B, requiere 24GB)
 
 > **Nota, no continuación.** Esto ya no responde la pregunta del arco (*local en 16GB*) — la responde otra (*¿a qué tamaño converge?*) y exige hardware que rompe la restricción original. Queda documentado como referencia para el día que haya una tarjeta de 24GB, no como paso pendiente.
+>
+> **Nota posterior (27-jul-2026):** esta sección se escribió cuando la premisa era que 16GB no alcanzaba. Ya no es cierto — el control con arnés ajeno cerró la tarea en 16GB. El 27B dense sigue siendo interesante por su techo de capacidad, pero **dejó de ser la única salida**: la otra es un arnés que no distorsione la medición.
 
 El **tier 27B** es donde el coding agéntico empieza a funcionar de verdad — pero en Q6, que necesita ~24GB (ver Conclusión #5: a Q2 para caber en 16GB, el 27B queda lisiado en el debug). Qwen3.6-27B (Alibaba, 22-abr-2026, Apache 2.0, dense, 262K ctx) — números **verificados** (blog oficial + medios independientes):
 
@@ -98,7 +117,7 @@ La misma familia tiene un **Qwen3.6-35B-A3B (MoE, 3B activos)** que el marketing
 - **Harness:** `ornith_agent_v3.py` (directed verify loop + read-block + feedback nítido), settings temp 0.6, think off, cap `num_predict`.
 - **Tarea:** el mismo Stats Dashboard de `petdesk-v2 @ v8-baseline`.
 - **Aceptación:** `npm test` + `lint` + `build` verdes, con los archivos del feature presentes.
-- **Hipótesis:** con 59.3 en Terminal-Bench, **converge** — cierra los 2 bugs de lógica que el ternario Q2 no pudo, y responde la pregunta *distinta*: *"¿a qué tamaño (y precisión) converge un modelo local?"*. No reabre el arco de 16GB, que ya cerró en NO.
+- **Hipótesis:** con 59.3 en Terminal-Bench, **converge** — cierra los 2 bugs de lógica que el ternario Q2 no pudo, y responde la pregunta *distinta*: *"¿a qué tamaño (y precisión) converge un modelo local?"*. ~~No reabre el arco de 16GB, que ya cerró en NO.~~ **(Corregido 27-jul-2026: el arco de 16GB NO cerró en NO — ver [el control con arnés ajeno](#el-control-con-arnés-ajeno-la-respuesta-era-sí).)**
 
 ### Notas de reproducibilidad
 
@@ -139,7 +158,7 @@ Referencia externa: [`kvcache-ai/ktransformers`](https://github.com/kvcache-ai/k
 - **No rescata el arco de 16GB.** El perfil real es 24GB VRAM **+ un pool ENORME de DRAM** apuntando a MoEs gigantes → workstation/server, no el desktop del arco. Rompe la restricción original igual que Qwen3.6-27B Q6.
 - **No refuta "dense > MoE para agéntico"** (Conclusión de arriba): ese hallazgo es de **confiabilidad/profundidad**, no de VRAM. KTransformers hace *factible* correr el MoE; no lo hace mejor agente.
 
-**Encaje:** puro arnés (capa de serving), la contraparte del gotcha de llama.cpp — otra pieza que expande *qué modelo podés servir* sin tocar la capacidad de razonamiento. Relevante el día que la pregunta sea *"¿y si tengo una workstation con mucha RAM?"*, no la de 16GB local.
+**Encaje:** puro arnés (capa de serving), la contraparte del gotcha de llama.cpp — otra pieza que expande *qué modelo se puede servir* sin tocar la capacidad de razonamiento. Relevante el día que la pregunta sea *"¿y si tengo una workstation con mucha RAM?"*, no la de 16GB local.
 
 ### Aterrizaje en llama.cpp: `--n-cpu-moe` corre el 35B-A3B en tarjeta chica (misma técnica, sin KTransformers)
 
@@ -174,13 +193,81 @@ Terminó `ALL GREEN` (step 44/90, 44 tests pass, lint 0 err, build ok). **Proces
 
 **PERO** el verde honesto **se desvía del spec**. El spec dice *"working minutes across the days IN RANGE"*; el modelo implementó *"days WITH appointments"* (`uniqueDays` derivado de las citas, no del rango). Probado empíricamente: rango de 3 días con 1 día de citas → da `0.1111` (`60/540`) cuando el spec pide `0.0370` (`60/1620`). Y el numerador **sigue en `end-start`**, no `service.durationMin`. El modelo debuggeó **correctamente hacia su propia mala lectura del spec** — no hizo trampa, comprendió mal.
 
-### Conclusión en capas (el hallazgo)
+### Conclusión en capas (el hallazgo) — capa 2 REFUTADA
+
+> **⚠️ La capa 1 se sostiene. La capa 2 es incorrecta** (27-jul-2026). La comprensión del spec **no** es un piso del modelo: con el mismo modelo y un arnés que no fuera propio, salió correcta 3 de 3 veces. El corolario de abajo, en cambio, acertó de lleno y es lo que destrabó todo.
 
 La pregunta era *"¿el piso de debug es tooling o razonamiento?"*. Respuesta: **las dos, en capas**:
 1. **La DESHONESTIDAD (gaming) era tooling.** Observación + valores reales → desapareció. El arnés cruzó ese piso.
-2. **La COMPRENSIÓN DEL SPEC es del modelo.** Ninguna tool que agregamos toca *"¿entendiste el spec?"*. Ahí queda el piso — razonamiento, no arnés.
+2. ~~**La COMPRENSIÓN DEL SPEC es del modelo.** Ninguna tool que agregamos toca *"¿entendiste el spec?"*. Ahí queda el piso — razonamiento, no arnés.~~ **← REFUTADA.** El off-spec no venía de una incapacidad del modelo sino de una instrucción del propio arnés (ver capítulo siguiente).
 
 **Corolario metodológico:** el verde off-spec pasó porque el harness **no tenía aceptación inmutable derivada del spec** — el modelo se autoescribió los tests → deriva self-consistent. El cierre no es "mejores tools de debug" sino **anclar al spec verdadero** (tests/contracts reales, o un harness pro con aceptación fija). De ahí el próximo control: **Pi** ([`earendil-works/pi`](https://github.com/earendil-works/pi), harness pro multi-provider, apunta al mismo `llama-server`) con aceptación inmutable → *¿converge al spec VERDADERO cuando no escribe él los tests?*
+
+## El control con arnés ajeno: la respuesta era SÍ
+
+Ejecutado el **27-jul-2026**. Es el control que anticipa el corolario de arriba, y da vuelta el veredicto del arco.
+
+**Diseño.** Una sola variable cambia. Mismo modelo (`Qwen3.6-35B-A3B` offloadeado), mismo `llama-server`, mismo enunciado (`petdesk_task.txt`), mismo baseline pristino. Lo único distinto es el arnés: en vez de `ornith_agent_v4.py` (propio), **Pi** ([`earendil-works/pi`](https://github.com/earendil-works/pi)) apuntado al servidor local con una extensión de 20 líneas.
+
+**La pieza que faltaba en todo el arco: aceptación inmutable.** Suite escrita por el operador ANTES de la corrida, que vive fuera del work tree (`harness/acceptance/`), que el agente nunca ve y no puede editar. Se inyecta solo al juzgar y se retira sin dejar rastro (`harness/run-acceptance.sh`). Calibrada contra el output off-spec del v4: **21 pasan / 2 fallan**, y las 2 son exactamente la desviación conocida — árbitro que no es vacuo y falla solo en lo real.
+
+### Resultado: 3 de 3
+
+| Corrida | Aceptación | vitest | lint | build | eventos | seg |
+|---|---|---|---|---|---|---|
+| 1 | **PASS** | PASS | PASS | PASS | 62 | 447 |
+| 2 | **PASS** | PASS | PASS | PASS | 78 | 614 |
+| 3 | **PASS** | FAIL | PASS | PASS | 62 | 956 |
+
+El gate rojo de la 3 **no es código roto**: Pi aborta al compactar su propio contexto y deja un `debug.test.ts` tirado. Su engine pasa el árbitro igual. Correlación perfecta en 3 sesiones revisadas: 0 compactions → termina con DONE; 1 compaction → último evento = la compaction, tarea a medias. Es limitación del ejecutor en modo `-p`.
+
+Gate verificado de forma independiente en vez de creerle al agente: 45/45 tests, 0 lint, build limpio, y `src/domain/` + `tests/contracts/` + `CONSTITUTION.md` intactos.
+
+La diferencia se ve comparando un comentario de cada versión del código generado:
+
+```ts
+// v4 (arnés propio): Occupancy: only count days that actually have appointments in the range
+// Pi (arnés ajeno):   Count calendar days in range [rangeStart, rangeEnd)
+```
+
+### Por qué fallaba el v4: una línea del prompt
+
+`ornith_agent_v4.py:51` instruye:
+
+> *"The tests are FROZEN and CORRECT — fix the code to match the test, NEVER the test to match the code."*
+
+Puesta como defensa anti-gaming tras la corrida 1, y correcta en intención. Tiene un supuesto tácito: **que los tests son confiables.** Los escribía el propio modelo — y `:522` muestra que el freeze solo aplica en fase VERIFY, así que durante IMPLEMENT el agente escribió sus propios tests y después el harness se los declaró verdad. Se autoexaminó.
+
+**El mecanismo, verificado por aritmética en 2 corridas:** el modelo escribe buen código pero **calcula mal a mano los valores esperados**.
+
+| Corrida | Su test asertó | Correcto (sumado a mano) | Devolvió su impl |
+|---|---|---|---|
+| Pi attempt 1 | `180/3780` (contó una cita **cancelada**) | `120/3780 = 0.0317` | **0.0317** ✓ |
+| Pi run 3 | `660/3780` | `60+60+90+90+120+60+60+60 = 600` → `0.1587` | **0.1587** ✓ |
+
+Las dos veces el código estaba bien y el test estaba mal. Bajo la instrucción del v4 eso se resuelve rompiendo el código correcto para obedecer la mala aritmética. **La guarda anti-trampa era una máquina de romper código bueno**, y su resultado se leyó como un límite del modelo.
+
+### Lo que esto corrige del arco
+
+1. **El veredicto "NO en 16GB" era sobre el arnés, no sobre el modelo.** Las 9 corridas previas eran reales, pero cada fila de esa tabla es también un arnés distinto — y el último tenía este defecto.
+2. **Una guarda en lenguaje natural es una hipótesis, no una garantía, y falla en silencio.** Un guardarraíl en código tira error; una instrucción en un prompt sesga la salida sin avisar.
+3. **La aceptación tiene que ser de autoría externa, como instrumento.** Dato que lo respalda: en una corrida correcta, el test que el modelo escribió para sí mismo usaba un rango de UN día — caso donde ambas interpretaciones de la métrica dan lo mismo. Su autoexamen no discriminaba. Acertó, pero sus tests no lo obligaban.
+4. **Un arnés propio no puede medir un modelo.** Cuando el resultado falla hay dos explicaciones y el sesgo natural es culpar a la pieza que uno no escribió.
+
+### Gotchas del control (Pi)
+
+- **`-nc` OBLIGATORIO.** Pi auto-descubre `AGENTS.md`/`CLAUDE.md` **subiendo por el árbol**: desde `harness/petdesk-work` alcanza `AgentCode/CLAUDE.md`, que documenta este experimento y su respuesta. Sin `-nc` el modelo no resuelve el spec, lo lee de las notas. Verificado post-hoc: 0 menciones de MODELOS-LOCALES/multica/Kanban en las sesiones.
+- **`-p` no stremea el transcript a stdout** — el log queda vacío y parece que no corrió nada. Todo está en el `.jsonl` de `--session-dir`.
+- **Contexto**: con `-c 32768` la primera corrida murió (`request (32825 tokens) exceeds the available context size`). A 64K el costo fue **+300 MB** de VRAM (11,6 → 11,9 GB) con KV en `q8_0`. Racionar contexto es error caro.
+- **Dos huecos del arnés de prueba que se leían como defectos del modelo**: el `vitest.config.ts` del baseline no declara los alias `@/*` (válidos en `next build`, invisibles para el runner), y la route lee `request.nextUrl`, que un `Request` pelado no tiene → hay que manejarla con `NextRequest`. Sin calibrar la suite, ambas entraban al informe como fallas del agente.
+
+### Reproducibilidad (control Pi)
+
+- `harness/run-pi-control.sh` — corrida única + veredicto. Incluye el comando de relanzamiento del server.
+- `harness/run-pi-repeat.sh` — repeticiones con reset pristino y sesión nueva; escribe `harness/pi-variance-summary.tsv`.
+- `harness/acceptance/` — la suite, su config de vitest con los alias, y el README con las 5 decisiones de fairness (dónde el spec es ambiguo, el fixture se construye para que todas las lecturas den el mismo valor).
+- `harness/artifacts/pi-phase1-run{1,2,3}/` y `pi-phase1-attempt1/` — código generado + sesión `.jsonl` de cada corrida.
+- Server: idéntico al del v4 salvo `-c 65536`.
 
 ### Reproducibilidad (v3/v4)
 
