@@ -39,11 +39,9 @@ EL RESULTADO
 Tres corridas independientes: tres de tres correctas según la especificación. Verifiqué el gate por mi cuenta en vez de creerle al agente: 45 de 45 tests, cero lint, build limpio.
 
 • Costo por token: de ~US$1,07 por feature a cero.
-• Tiempo por corrida: ~11 min en la nube, 7,5 a 16 min en local. Competitivo, contra lo que esperaba.
+• Tiempo por corrida: ~11 min en la nube, 7,5 a 16 min en local. Competitivo.
 
 MI OPINIÓN, DESPUÉS DE MEDIR
-
-Lo más incómodo que encontré no es sobre modelos locales, es sobre método.
 
 Una guarda escrita en lenguaje natural es una hipótesis, no una garantía, y falla en silencio. El caso concreto: una instrucción del tipo "los tests están congelados y son correctos, arregla el código para que coincida" —puesta para impedir que el agente edite un test a su conveniencia— es contraproducente cuando los tests los escribe el propio modelo. El mecanismo es directo: el modelo escribe buen código pero calcula mal los valores esperados a mano. Afirmó 660 donde la suma de los datos daba 600, y su código había calculado 600. Al declarar ese número verdad, la guarda rompe código correcto.
 
