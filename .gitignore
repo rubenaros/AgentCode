@@ -26,3 +26,7 @@ harness/models/
 harness/llama-prism/
 harness/petdesk-work/
 .atl/
+
+# Estado transitorio de las corridas — se borra en cada run.
+# Las sesiones que importan quedan archivadas en harness/artifacts/.
+harness/pi-sessions/
