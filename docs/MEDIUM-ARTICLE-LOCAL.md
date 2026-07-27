@@ -22,7 +22,7 @@ De ahí el problema de fondo de correr local, el doble bind: **un modelo más ch
 
 La salida es un arnés liviano: bucle de control, herramientas (leer, escribir, editar, bash), gestión de contexto, y poco más. **Pi**, de propósito general y multi-proveedor, arranca con una fracción de ese piso. Conectarlo al modelo local son veinte líneas registrando un proveedor compatible con OpenAI.
 
-Hay un segundo criterio, y es de método: **conviene un arnés de propósito general antes que uno a medida.** No por calidad de código, sino porque cada instrucción que se agrega a un arnés propio es una hipótesis sin probar que entra al experimento disfrazada de infraestructura. Cuando el resultado falla, el arnés es una variable más, no un instrumento neutral — y el sesgo natural es atribuir la falla al modelo, que es la pieza que no se escribió. La conclusión 3 documenta un caso concreto.
+Hay un segundo criterio, y es de método: **conviene un arnés de propósito general antes que uno a medida.** No por calidad de código, sino porque cada instrucción que se agrega a un arnés propio es una hipótesis sin probar que entra al experimento disfrazada de infraestructura. Cuando el resultado falla, el arnés es una variable más, no un instrumento neutral — y el sesgo natural es atribuir la falla al modelo, que es la pieza que no se escribió.
 
 ## 2. El modelo: por qué un MoE de 35B y no un denso
 
@@ -120,11 +120,9 @@ El tiempo es competitivo. La expectativa razonable era que lo local fuera dramá
 
 **2. La aceptación tiene que ser de autoría externa al agente.** No por desconfianza, sino como instrumento. Un detalle lo ilustra: en una de las corridas correctas, el test que el modelo escribió para sí mismo usaba un rango de un solo día, un caso donde las dos interpretaciones posibles de la métrica dan el mismo número. Su propio examen no distinguía la respuesta correcta de la equivocada. Acertó, pero sus tests no lo obligaban a acertar.
 
-**3. Una guarda escrita en lenguaje natural es una hipótesis, no una garantía, y falla en silencio.** El caso documentado: una instrucción del tipo *"los tests están congelados y son correctos, arregla el código para que coincida con el test"* —puesta para impedir que el agente edite un test a su conveniencia— es contraproducente cuando los tests los escribe el propio modelo. El mecanismo es directo: el modelo escribe buen código pero calcula mal los valores esperados a mano. En dos corridas afirmó 660 donde la suma de los datos daba 600, y su código había calculado 600. Al declarar ese número verdad e instruir que se obedezca, la guarda rompe código correcto. Un guardarraíl en código tira un error; una instrucción en un prompt sesga la salida sin avisar.
+**3. El offload de expertos cambia lo factible, no lo confiable.** Permite servir un modelo que no entraba. No lo vuelve mejor agente. Aquí lo factible era la restricción que mandaba, así que alcanzó.
 
-**4. El offload de expertos cambia lo factible, no lo confiable.** Permite servir un modelo que no entraba. No lo vuelve mejor agente. Aquí lo factible era la restricción que mandaba, así que alcanzó.
-
-**5. El orden de las decisiones es el de este texto.** Primero el arnés, que define cuánto contexto queda; después el modelo que entra en lo que sobra; después el serving; y la aceptación desde el principio. Elegir el modelo primero es el error natural y el que más caro sale.
+**4. El orden de las decisiones es el de este texto.** Primero el arnés, que define cuánto contexto queda; después el modelo que entra en lo que sobra; después el serving; y la aceptación desde el principio. Elegir el modelo primero es el error natural y el que más caro sale.
 
 ---
 
