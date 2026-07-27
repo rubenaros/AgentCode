@@ -43,11 +43,9 @@ Tres corridas independientes: tres de tres correctas según la especificación. 
 
 MI OPINIÓN, DESPUÉS DE MEDIR
 
-Una guarda escrita en lenguaje natural es una hipótesis, no una garantía, y falla en silencio. El caso concreto: una instrucción del tipo "los tests están congelados y son correctos, arregla el código para que coincida" —puesta para impedir que el agente edite un test a su conveniencia— es contraproducente cuando los tests los escribe el propio modelo. El mecanismo es directo: el modelo escribe buen código pero calcula mal los valores esperados a mano. Afirmó 660 donde la suma de los datos daba 600, y su código había calculado 600. Al declarar ese número verdad, la guarda rompe código correcto.
+El orden de las decisiones es el de este post, y no es casual: el arnés va primero porque define cuánto contexto le queda al modelo. Elegir el modelo primero es el error natural y el que más caro sale.
 
-Un guardarraíl en código tira un error. Una instrucción en un prompt sesga la salida sin avisar. Si vas a escribir reglas para el agente, asume que cada una es una hipótesis que también hay que probar.
-
-Y el orden de las decisiones es el de este post: primero el arnés, que define cuánto contexto queda; después el modelo que entra en lo que sobra; después el serving; y la aceptación desde el principio. Elegir el modelo primero es el error natural y el que más caro sale.
+Y la aceptación va desde el principio, no al final. Si la escribe el propio agente, no estás midiendo su trabajo: estás leyendo su interpretación del enunciado.
 
 El detalle completo, con la configuración y los números, en Medium (link en comentarios).
 
