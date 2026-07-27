@@ -1,0 +1,143 @@
+diff --git a/src/app/dashboard/page.tsx b/src/app/dashboard/page.tsx
+index fdca435..1dc1b6d 100644
+--- a/src/app/dashboard/page.tsx
++++ b/src/app/dashboard/page.tsx
+@@ -29,25 +29,42 @@ interface Notification {
+   createdAt: string;
+ }
+ 
++interface ServiceCount {
++  serviceId: string;
++  count: number;
++}
++
++interface StatsData {
++  appointmentsTotal: number;
++  appointmentsCompleted: number;
++  cancellationRate: number;
++  occupancyRate: number;
++  topServicesByBookings: ServiceCount[];
++  topServicesByCancellations: ServiceCount[];
++}
++
+ export default function DashboardPage() {
+   const [appointments, setAppointments] = useState<Appointment[]>([]);
+   const [waitlist, setWaitlist] = useState<WaitlistEntry[]>([]);
+   const [notifications, setNotifications] = useState<Notification[]>([]);
++  const [stats, setStats] = useState<StatsData | null>(null);
+   const [isLoading, setIsLoading] = useState(true);
+   const [timeOffset, setTimeOffset] = useState(0); // hours to advance
+ 
+   const fetchData = async () => {
+     setIsLoading(true);
+     try {
+-      const [apptsRes, waitRes, notifRes] = await Promise.all([
++      const [apptsRes, waitRes, notifRes, statsRes] = await Promise.all([
+         fetch("/api/appointments"),
+         fetch("/api/waitlist"),
+         fetch("/api/notifications"),
++        fetch("/api/stats"),
+       ]);
+ 
+       if (apptsRes.ok) setAppointments(await apptsRes.json());
+       if (waitRes.ok) setWaitlist(await waitRes.json());
+       if (notifRes.ok) setNotifications(await notifRes.json());
++      if (statsRes.ok) setStats((await statsRes.json()).stats);
+     } catch (error) {
+       console.error("Error fetching data:", error);
+     } finally {
+@@ -63,6 +80,17 @@ export default function DashboardPage() {
+     loadData();
+   }, []);
+ 
++  // Poll stats every 5 seconds
++  useEffect(() => {
++    const interval = setInterval(() => {
++      fetch("/api/stats")
++        .then((r) => r.ok && r.json())
++        .then((d) => d && setStats(d.stats))
++        .catch(() => {});
++    }, 5000);
++    return () => clearInterval(interval);
++  }, []);
++
+   const handleCancel = async (appointmentId: string) => {
+     if (!confirm("¿Cancelar esta cita? El hueco se ofrecerá al primer cliente en lista de espera.")) return;
+ 
+@@ -170,6 +198,76 @@ export default function DashboardPage() {
+           <p className="mt-2 text-zinc-500">Gestiona citas, lista de espera y notificaciones en tiempo real.</p>
+         </div>
+ 
++        {/* Stats Dashboard */}
++        <section className="mb-8">
++          <h2 className="mb-4 text-xl font-semibold">📊 Estadísticas (últimos 30 días)</h2>
++          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
++            {/* Total appointments */}
++            <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
++              <div className="text-3xl font-bold text-zinc-900">
++                {stats ? stats.appointmentsTotal : '—'}
++              </div>
++              <div className="mt-1 text-sm text-zinc-500">Total citas</div>
++            </div>
++
++            {/* Cancellation rate */}
++            <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
++              <div className="text-3xl font-bold text-red-600">
++                {stats ? `${(stats.cancellationRate * 100).toFixed(1)}%` : '—'}
++              </div>
++              <div className="mt-1 text-sm text-zinc-500">Tasa de cancelación</div>
++            </div>
++
++            {/* Occupancy rate */}
++            <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
++              <div className="text-3xl font-bold text-blue-600">
++                {stats ? `${(stats.occupancyRate * 100).toFixed(1)}%` : '—'}
++              </div>
++              <div className="mt-1 text-sm text-zinc-500">Ocupación</div>
++            </div>
++
++            {/* Completed */}
++            <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
++              <div className="text-3xl font-bold text-green-600">
++                {stats ? stats.appointmentsCompleted : '—'}
++              </div>
++              <div className="mt-1 text-sm text-zinc-500">Completadas</div>
++            </div>
++          </div>
++
++          {/* Top services */}
++          <div className="mt-4 grid gap-4 sm:grid-cols-2">
++            <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
++              <h3 className="text-sm font-semibold text-zinc-700">🏆 Top 3 servicios por reservas</h3>
++              <ul className="mt-2 space-y-1">
++                {(stats?.topServicesByBookings.slice(0, 3) ?? []).map((s, i) => (
++                  <li key={s.serviceId} className="flex items-center justify-between text-sm">
++                    <span className="text-zinc-600">{i + 1}. {s.serviceId}</span>
++                    <span className="font-medium">{s.count}</span>
++                  </li>
++                ))}
++                {(stats?.topServicesByBookings.length === 0) && (
++                  <li className="text-sm text-zinc-400">Sin datos</li>
++                )}
++              </ul>
++            </div>
++            <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
++              <h3 className="text-sm font-semibold text-zinc-700">📉 Top 3 servicios por cancelaciones</h3>
++              <ul className="mt-2 space-y-1">
++                {(stats?.topServicesByCancellations.slice(0, 3) ?? []).map((s, i) => (
++                  <li key={s.serviceId} className="flex items-center justify-between text-sm">
++                    <span className="text-zinc-600">{i + 1}. {s.serviceId}</span>
++                    <span className="font-medium">{s.count}</span>
++                  </li>
++                ))}
++                {(stats?.topServicesByCancellations.length === 0) && (
++                  <li className="text-sm text-zinc-400">Sin datos</li>
++                )}
++              </ul>
++            </div>
++          </div>
++        </section>
++
+         {/* Time control */}
+         <div className="mb-8 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+           <h2 className="text-lg font-semibold">⏰ Control de tiempo (demo)</h2>

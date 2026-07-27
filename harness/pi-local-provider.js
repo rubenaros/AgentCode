@@ -14,7 +14,9 @@ export default function (pi) {
         reasoning: false,
         input: ["text"],
         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-        contextWindow: 32768,
+        // Must match llama-server's -c. At 32768 the phase-1 control run died
+        // mid-task: "request (32825 tokens) exceeds the available context size".
+        contextWindow: 65536,
         maxTokens: 8192,
         compat: { maxTokensField: "max_tokens" },
       },

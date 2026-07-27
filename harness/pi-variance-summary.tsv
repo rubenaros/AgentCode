@@ -1,0 +1,4 @@
+run	acceptance	vitest	lint	build	events	seconds
+1	PASS	PASS	PASS	PASS	62	447
+2	PASS	PASS	PASS	PASS	78	614
+3	PASS	FAIL	PASS	PASS	62	956
