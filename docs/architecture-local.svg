@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 800" font-family="'Helvetica Neue', Arial, sans-serif">
+  <rect width="960" height="800" fill="#f6f5f2"/>
+
+  <!-- header -->
+  <text x="40" y="48" fill="#8a857d" font-size="11" font-family="ui-monospace, Menlo, monospace" letter-spacing="3">MODELO LOCAL · RTX 3080 · 16 GB VRAM</text>
+  <text x="40" y="88" fill="#1c1917" font-size="30" font-family="Georgia, 'Times New Roman', serif">Las cuatro decisiones, en orden</text>
+  <text x="40" y="112" fill="#57534e" font-size="13">Cada una fija el presupuesto de la siguiente. Elegir el modelo primero es el error natural y el más caro.</text>
+
+  <!-- sequence rule (behind the numbers) -->
+  <line x1="68" y1="200" x2="68" y2="620" stroke="#d6d2c9" stroke-width="1"/>
+
+  <!-- ============ 01 · ARNÉS (focal) ============ -->
+  <text x="68" y="222" fill="#b5523a" font-size="20" font-family="ui-monospace, Menlo, monospace" text-anchor="middle">01</text>
+  <rect x="104" y="160" width="816" height="112" rx="6" fill="#f3e7e2" stroke="#b5523a" stroke-width="1"/>
+  <text x="132" y="188" fill="#b5523a" font-size="9" font-family="ui-monospace, Menlo, monospace" letter-spacing="2">ARNÉS</text>
+  <text x="132" y="216" fill="#1c1917" font-size="16" font-weight="600">Pi — liviano y de propósito general</text>
+  <text x="132" y="240" fill="#57534e" font-size="12">Lo que manda es el contexto consumido en t0, antes de leer una línea del repo.</text>
+  <text x="132" y="258" fill="#57534e" font-size="12">Y ese piso se reprocesa en cada turno, sobre hardware lento en prompt.</text>
+  <text x="896" y="212" fill="#b5523a" font-size="16" font-family="ui-monospace, Menlo, monospace" text-anchor="end">~20.500 tok</text>
+  <text x="896" y="230" fill="#8a857d" font-size="8" font-family="ui-monospace, Menlo, monospace" text-anchor="end" letter-spacing="1">PISO QUE SE EVITA</text>
+
+  <!-- ============ 02 · MODELO ============ -->
+  <text x="68" y="350" fill="#8a857d" font-size="20" font-family="ui-monospace, Menlo, monospace" text-anchor="middle">02</text>
+  <rect x="104" y="288" width="816" height="112" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <text x="132" y="316" fill="#8a857d" font-size="9" font-family="ui-monospace, Menlo, monospace" letter-spacing="2">MODELO · POR DESCARTE</text>
+  <text x="132" y="344" fill="#1c1917" font-size="16" font-weight="600">Qwen3.6-35B-A3B — MoE, 3B activos</text>
+  <text x="132" y="368" fill="#8a857d" font-size="12">Denso 7–14B no converge · Denso 27B no entra · 27B a 2 bits queda lisiado en el debug</text>
+  <text x="132" y="386" fill="#57534e" font-size="12">El MoE entra manteniendo 4 bits de calidad. Es el peor de los dos candidatos, y el único que cabe.</text>
+  <text x="896" y="340" fill="#1c1917" font-size="16" font-family="ui-monospace, Menlo, monospace" text-anchor="end">73,4</text>
+  <text x="896" y="358" fill="#8a857d" font-size="8" font-family="ui-monospace, Menlo, monospace" text-anchor="end" letter-spacing="1">SWE-BENCH VERIFIED</text>
+
+  <!-- ============ 03 · SERVING ============ -->
+  <text x="68" y="478" fill="#8a857d" font-size="20" font-family="ui-monospace, Menlo, monospace" text-anchor="middle">03</text>
+  <rect x="104" y="416" width="816" height="112" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <text x="132" y="444" fill="#8a857d" font-size="9" font-family="ui-monospace, Menlo, monospace" letter-spacing="2">SERVING</text>
+  <text x="132" y="472" fill="#1c1917" font-size="16" font-weight="600">llama.cpp · <tspan font-family="ui-monospace, Menlo, monospace" font-size="14">--n-cpu-moe 22</tspan></text>
+  <text x="132" y="496" fill="#57534e" font-size="12">22 capas de expertos a RAM. Un modelo de 20,8 GB en disco entra en una tarjeta de 16.</text>
+  <text x="132" y="514" fill="#57534e" font-size="12">Con la caché KV en q8_0, duplicar el contexto a 64K cuesta 300 MB. Racionarlo es error caro.</text>
+  <text x="896" y="468" fill="#1c1917" font-size="16" font-family="ui-monospace, Menlo, monospace" text-anchor="end">11,9 / 16 GB</text>
+  <text x="896" y="486" fill="#8a857d" font-size="8" font-family="ui-monospace, Menlo, monospace" text-anchor="end" letter-spacing="1">VRAM · ~53 TOK/S</text>
+
+  <!-- ============ 04 · ACEPTACIÓN ============ -->
+  <text x="68" y="606" fill="#8a857d" font-size="20" font-family="ui-monospace, Menlo, monospace" text-anchor="middle">04</text>
+  <rect x="104" y="544" width="816" height="112" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <text x="132" y="572" fill="#8a857d" font-size="9" font-family="ui-monospace, Menlo, monospace" letter-spacing="2">ACEPTACIÓN</text>
+  <text x="132" y="600" fill="#1c1917" font-size="16" font-weight="600">Suite de autoría externa, invisible para el agente</text>
+  <text x="132" y="624" fill="#57534e" font-size="12">Vive fuera del work tree, se inyecta solo al juzgar y se retira sin dejar rastro.</text>
+  <text x="132" y="642" fill="#57534e" font-size="12">Calibrada contra un resultado defectuoso conocido: 21 pasan, 2 fallan, y las 2 son la desviación real.</text>
+  <text x="896" y="596" fill="#b5523a" font-size="20" font-family="ui-monospace, Menlo, monospace" text-anchor="end" font-weight="600">3 / 3</text>
+  <text x="896" y="616" fill="#8a857d" font-size="8" font-family="ui-monospace, Menlo, monospace" text-anchor="end" letter-spacing="1">CORRECTAS SEGÚN SPEC</text>
+
+  <!-- editorial aside -->
+  <text x="104" y="700" fill="#1c1917" font-size="15" font-family="Georgia, 'Times New Roman', serif" font-style="italic">Con el mismo modelo y un arnés propio, el resultado era off-spec. La variable era el arnés.</text>
+
+  <!-- bottom strip: local vs nube -->
+  <line x1="40" y1="728" x2="920" y2="728" stroke="#d6d2c9" stroke-width="0.8"/>
+  <text x="40" y="752" fill="#8a857d" font-size="8" font-family="ui-monospace, Menlo, monospace" letter-spacing="2">CONTRA LA NUBE</text>
+  <text x="200" y="752" fill="#57534e" font-size="11">Costo por token</text>
+  <text x="200" y="770" fill="#1c1917" font-size="11" font-family="ui-monospace, Menlo, monospace">~US$1,07 / feature  →  cero</text>
+  <text x="520" y="752" fill="#57534e" font-size="11">Tiempo por corrida</text>
+  <text x="520" y="770" fill="#1c1917" font-size="11" font-family="ui-monospace, Menlo, monospace">~11 min  →  7,5 a 16 min</text>
+</svg>

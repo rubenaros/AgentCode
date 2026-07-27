@@ -2,7 +2,7 @@
 
 *Qué arnés, qué modelo, cómo servirlo y qué resultado da, medido contra una aceptación que el agente no escribe ni puede ver. Hardware: una RTX 3080 Laptop de 16 GB. Tarea: la misma de toda la serie —el Stats Dashboard de un repositorio Next.js + TypeScript, con motor de cálculo, endpoint de API, interfaz y tests—.*
 
-![Las cuatro decisiones, en orden: arnés, modelo, serving y aceptación](https://raw.githubusercontent.com/rubenaros/AgentCode/main/docs/architecture-local.svg)
+![Las cuatro decisiones, en orden: arnés, modelo, serving y aceptación](architecture-local.png)
 
 ---
 
@@ -28,12 +28,10 @@ Hay un segundo criterio, y es de método: **conviene un arnés de propósito gen
 
 La elección sale de descartar, y el camino es reproducible:
 
-| Opción | Por qué queda afuera |
-|---|---|
-| Denso 7B–14B | No convergen en tareas agénticas multi-paso: bucles de lectura, divagación fuera de alcance, código roto. Coincide con lo que reporta la investigación de mercado. |
-| Denso 27B en calidad usable | Necesita unos 24 GB. No entra. |
-| Denso 27B bajado a 2 bits para que entre | Entra, pero la cuantización agresiva se come primero el razonamiento de última milla — justo la capacidad que hace falta. Escribe 45 de 47 tests en verde y se traba sin poder diagnosticar dos bugs sutiles. **Un 27B a 2 bits no es un 27B.** |
-| **MoE 35B con expertos en RAM** | **Entra manteniendo 4 bits de calidad.** |
+- **Denso 7B–14B:** no convergen en tareas agénticas multi-paso —bucles de lectura, divagación fuera de alcance, código roto—. Coincide con lo que reporta la investigación de mercado.
+- **Denso 27B en calidad usable:** necesita unos 24 GB. No entra.
+- **Denso 27B bajado a 2 bits para que entre:** entra, pero la cuantización agresiva se come primero el razonamiento de última milla, justo la capacidad que hace falta. Escribe 45 de 47 tests en verde y se traba sin poder diagnosticar dos bugs sutiles. Un 27B a 2 bits no es un 27B.
+- **MoE 35B con expertos en RAM:** entra manteniendo 4 bits de calidad.
 
 La clave del último renglón: un modelo *Mixture of Experts* activa solo una fracción de sus parámetros por token —35B totales, 3B activos—, y sus expertos se pueden mantener en la RAM del sistema en vez de la VRAM.
 
@@ -92,11 +90,9 @@ Tres requisitos para que sirva:
 
 Tres corridas independientes: árbol de trabajo limpio y sesión nueva cada una, mismo enunciado, mismo servidor.
 
-| Corrida | Aceptación | Tests | Lint | Build | Tiempo |
-|---|---|---|---|---|---|
-| 1 | **correcta** | verde | verde | verde | 7,5 min |
-| 2 | **correcta** | verde | verde | verde | 10,2 min |
-| 3 | **correcta** | rojo | verde | verde | 16 min |
+- **Corrida 1:** aceptación correcta. Tests, lint y build en verde. 7,5 min.
+- **Corrida 2:** aceptación correcta. Tests, lint y build en verde. 10,2 min.
+- **Corrida 3:** aceptación correcta. Tests en rojo; lint y build en verde. 16 min.
 
 **Tres de tres correctas según la especificación.**
 
@@ -106,11 +102,9 @@ El gate se verificó de forma independiente en vez de creerle al agente: 45 de 4
 
 Contra la referencia del artículo anterior, la misma feature con modelos de pago:
 
-| | Nube | Local |
-|---|---|---|
-| Costo por token | ~US$1,07 por feature | cero |
-| Tiempo por corrida | ~11 min | 7,5 a 16 min |
-| Varianza de tiempo | ~1,8× | ~2,1× |
+- **Costo por token:** ~US$1,07 por feature en la nube; cero en local.
+- **Tiempo por corrida:** ~11 min en la nube; 7,5 a 16 min en local.
+- **Varianza de tiempo:** ~1,8× en la nube; ~2,1× en local.
 
 El tiempo es competitivo. La expectativa razonable era que lo local fuera dramáticamente más lento, y no lo es.
 
